@@ -9,10 +9,10 @@ Experiment 3, selectivity (or Seletivity)
 Experiment 4, stability (Stability)
 Experiment 5, reproducible detection of endogenous analyte (Endogenous)
 
-The work flow of qcAssayPortal is shown in workflow.pdf. 
+The work flow of qcAssayPortal is shown in src\qcAssayPortal\doc\workflow.pdf. 
 
 A report file will be generated which will capture the details of errors and warnings when running the R codes for the individual experiment.
-The details of the errors and warnings are listed in issue_categories.pdf
+The details of the errors and warnings are listed in src\qcAssayPortal\doc\issue_categories.pdf
 
 Documentation
 -------------
