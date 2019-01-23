@@ -20,7 +20,7 @@ Documentation
 * [Installation](#installation)
   * [Install qcAssayPortal](#install-qcAssayPortal)
 * [How to use it](#how-to-use-it)
-  * [Command line](#command line)
+  * [Command line](#command-line)
 * [Changelog](#changelog)
 * [Citation](#citation)
 
