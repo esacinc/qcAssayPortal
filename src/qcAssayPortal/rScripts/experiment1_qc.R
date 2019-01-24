@@ -231,9 +231,12 @@ labkey.data.total[,'peptideconcentrationis'] <-  as.numeric(as.character(labkey.
 labkey.data.total[,'peptideconcentration'] <-  as.numeric(as.character(labkey.data.total[,'peptideconcentration']))
 labkey.data.total[,'multiplicationfactor'] <-  as.numeric(as.character(labkey.data.total[,'multiplicationfactor']))
 
+# Add a new temporary column fragment_ion_complete
+labkey.data.total$fragment_ion_complete <- paste(labkey.data.total[ ,'fragmention'], " (", labkey.data.total[ ,'productcharge'], "+)", sep='' )
+
 # Write peptide information into output file.
 log_filename <- paste(plot_output_dir, "\\peptide_infor.tsv", sep='' )
-logdf <- data.frame(peptide=as.character(), precursorCharge=as.character(), isotopeLabelType=as.character(), uniProtKBID=as.character(), proteinName=as.character(), SkyDocumentName=as.character())
+logdf <- data.frame(peptide=as.character(), precursorCharge=as.character(), isotopeLabelType=as.character(), transition=as.character(), uniProtKBID=as.character(), proteinName=as.character(), SkyDocumentName=as.character())
 
 # Separate the error detecting codes from the warning detecting codes.
 # Traverse the SkyDocumentName in fileDf to detect all the possible errors.
@@ -260,7 +263,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
             if (nrow(labkey.data) >= 1) {
                 for (precursorchargeTmp in unique(labkey.data$precursorcharge)) {
                     isotopeLabelTypeTmp <- paste(sort(unique(labkey.data$isotopelabel)), collapse = '|')
-                    logdfTmp <- data.frame(peptide=input_peptide_sequence, precursorCharge=precursorchargeTmp, isotopeLabelType=isotopeLabelTypeTmp, uniProtKBID=protein_uniProtID, proteinName=input_protein_name, SkyDocumentName=SkyDocumentName)
+                    transitionTmp <- paste(unique(labkey.data$fragment_ion_complete), collapse = '|')
+                    logdfTmp <- data.frame(peptide=input_peptide_sequence, precursorCharge=precursorchargeTmp, isotopeLabelType=isotopeLabelTypeTmp, transition= transitionTmp, uniProtKBID=protein_uniProtID, proteinName=input_protein_name, SkyDocumentName=SkyDocumentName)
                     logdf <- rbind(logdf, logdfTmp)
                 }
             }
