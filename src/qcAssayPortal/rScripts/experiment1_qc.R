@@ -233,7 +233,7 @@ labkey.data.total[,'multiplicationfactor'] <-  as.numeric(as.character(labkey.da
 
 # Write peptide information into output file.
 log_filename <- paste(plot_output_dir, "\\peptide_infor.tsv", sep='' )
-logdf <- data.frame(peptide=as.character(), precursorCharge=as.character(), uniProtKBID=as.character(), proteinName=as.character(), SkyDocumentName=as.character())
+logdf <- data.frame(peptide=as.character(), precursorCharge=as.character(), isotopeLabelType=as.character(), uniProtKBID=as.character(), proteinName=as.character(), SkyDocumentName=as.character())
 
 # Separate the error detecting codes from the warning detecting codes.
 # Traverse the SkyDocumentName in fileDf to detect all the possible errors.
@@ -259,7 +259,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
             
             if (nrow(labkey.data) >= 1) {
                 for (precursorchargeTmp in unique(labkey.data$precursorcharge)) {
-                    logdfTmp <- data.frame(peptide=input_peptide_sequence, precursorCharge=precursorchargeTmp, uniProtKBID=protein_uniProtID, proteinName=input_protein_name, SkyDocumentName=SkyDocumentName)
+                    isotopeLabelTypeTmp <- paste(sort(unique(labkey.data$isotopelabel)), collapse = '|')
+                    logdfTmp <- data.frame(peptide=input_peptide_sequence, precursorCharge=precursorchargeTmp, isotopeLabelType=isotopeLabelTypeTmp, uniProtKBID=protein_uniProtID, proteinName=input_protein_name, SkyDocumentName=SkyDocumentName)
                     logdf <- rbind(logdf, logdfTmp)
                 }
             }

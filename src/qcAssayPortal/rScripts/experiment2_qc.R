@@ -154,7 +154,7 @@ QC_set_total[toupper(substr(QC_set_total$sample_group, 1, 1))=="H","sample_group
 
 # Write peptide information into output file.
 log_filename <- paste(plot_output_dir, "\\peptide_infor.tsv", sep='' )
-logdf <- data.frame(peptide=as.character(), precursorCharge=as.character(), uniProtKBID=as.character(), proteinName=as.character(), SkyDocumentName=as.character())
+logdf <- data.frame(peptide=as.character(), precursorCharge=as.character(), isotopeLabelType=as.character(), uniProtKBID=as.character(), proteinName=as.character(), SkyDocumentName=as.character())
 
 # Separate the error detecting codes from the warning detecting codes.
 # Traverse the SkyDocumentName in fileDf to detect all the possible errors.
@@ -181,7 +181,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 QC_setTmp <- QC_set3[QC_set3$protein_name==input_protein_name, ]
                 
                 if (nrow(QC_setTmp) >= 1) {
-                    logdfTmp <- data.frame(peptide=input_peptide_sequence, precursorCharge=input_precursor_charge, uniProtKBID=protein_uniProtID, proteinName=input_protein_name, SkyDocumentName=SkyDocumentName)
+                    isotopeLabelTypeTmp <- paste(sort(unique(QC_setTmp$isotope_label_type)), collapse = '|')
+                    logdfTmp <- data.frame(peptide=input_peptide_sequence, precursorCharge=input_precursor_charge, isotopeLabelType=isotopeLabelTypeTmp , uniProtKBID=protein_uniProtID, proteinName=input_protein_name, SkyDocumentName=SkyDocumentName)
                     logdf <- rbind(logdf, logdfTmp)
                 }
                 # Get a list of all unique fragment ions, unique days, unique sample groups (Lo, Med, Hi), unique replicates and unique isotope_label_type associated with current peptide
