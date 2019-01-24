@@ -182,7 +182,11 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 
                 if (nrow(QC_setTmp) >= 1) {
                     isotopeLabelTypeTmp <- paste(sort(unique(QC_setTmp$isotope_label_type)), collapse = '|')
-                    transitionTmp <- paste(unique(QC_setTmp$fragment_ion), collapse = '|')
+                    transitionTmp <- c()
+                    for (isotopeLabelTypeSubtmp in sort(unique(QC_setTmp$isotope_label_type))) {
+                        transitionTmp <- c(transitionTmp, paste(isotopeLabelTypeSubtmp, paste(sort(unique(QC_setTmp[QC_setTmp$isotope_label_type==isotopeLabelTypeSubtmp, ]$fragment_ion)), collapse = '|'), sep=':'))
+                    }
+                    transitionTmp <- paste(transitionTmp, collapse = ';')
                     logdfTmp <- data.frame(peptide=input_peptide_sequence, precursorCharge=input_precursor_charge, isotopeLabelType=isotopeLabelTypeTmp, transition=transitionTmp, uniProtKBID=protein_uniProtID, proteinName=input_protein_name, SkyDocumentName=SkyDocumentName)
                     logdf <- rbind(logdf, logdfTmp)
                 }
