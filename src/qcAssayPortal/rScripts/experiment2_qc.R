@@ -553,7 +553,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
 
     if (original_internal_standard[1] != inferred_internal_standard[1]) {
         errorType <- "Error"
-        errorSubtype <- "Internal standard incorrect"
+        errorSubtype <- "Internal standard"
         errorReason <- paste('The internal standard in the skyline file is set to be ', original_internal_standard, ', while the inferred internal standard is ', inferred_internal_standard, '.', sep='')
         errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, '', '', '', '', '', '', '', '', '', '', '', '', sep='\t')
         cat(errorInfor)
