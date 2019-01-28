@@ -931,7 +931,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
 
                 # output to files
                 CV_results_sorted <- CV_results[match(ions_in_table , CV_results$fragment_ion), ]
-                write.csv(CV_results_sorted, file=paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type ,"_CV_results", ".csv", sep=""), row.names = FALSE)
+                write.table(CV_results_sorted, file=paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type ,"_CV_results", ".tsv", sep=""), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
                 #write.csv(CV_results_sorted, file=paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type ,"_CV_results_", trunc(as.numeric(now)), ".csv", sep=""), row.names = FALSE)
                 # Top three plots were selected based on med_total_CV, low_total_CV and high_total_CV.
                 # med_total_CV, low_total_CV and high_total_CV of the will be used to evaluate the quality.
