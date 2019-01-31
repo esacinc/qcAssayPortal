@@ -494,7 +494,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     maxConcentration <- max(thisFragmentIon$Concentration)
                     medHLRation_min <- median(thisFragmentIon[thisFragmentIon$Concentration == minConcentration, ]$Median, na.rm=TRUE)
                     medHLRation_max <- median(thisFragmentIon[thisFragmentIon$Concentration == maxConcentration, ]$Median, na.rm=TRUE)
-                    if (is.null(medHLRation_min) | is.null(medHLRation_max)) {
+                    if (is.na(medHLRation_min) | is.na(medHLRation_max)) {
                         invisible()
                     } else if (medHLRation_max >= medHLRation_min) {
                         value1 <- value1 + 1

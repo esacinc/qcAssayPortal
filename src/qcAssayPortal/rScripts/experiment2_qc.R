@@ -515,7 +515,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                 lo_index_new <- concentration_sort[valid_index][length(concentration_sort[valid_index])]
                                 medHLRation_hi <- median(plot_fragment_ion_results[plot_fragment_ion_results$day == day_tmp & plot_fragment_ion_results$sample_group == hi_index_new, ]$calculated_area_ratio, na.rm=TRUE)
                                 medHLRation_lo <- median(plot_fragment_ion_results[plot_fragment_ion_results$day == day_tmp & plot_fragment_ion_results$sample_group == lo_index_new, ]$calculated_area_ratio, na.rm=TRUE)
-                                if (is.null(medHLRation_hi) | is.null(medHLRation_lo)) {
+                                if (is.na(medHLRation_hi) | is.na(medHLRation_lo)) {
                                     invisible()
                                 } else if (medHLRation_hi >= medHLRation_lo) {
                                     value1 <- value1 + 1
