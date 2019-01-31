@@ -20,7 +20,7 @@ setup(
 	license='MIT',
 	package_dir={'': 'src'},
 	packages=find_packages('src', exclude=['.txt']),
-	package_data = {'qcAssayPortal':['rScripts/*.R', 'skyrTemps/*.skyr', 'htmlTemps/*.html', 'htmlTemps/*.png']},
+	package_data = {'qcAssayPortal':['rScripts/*.R', 'skyrTemps/*.skyr', 'htmlTemps/*.html']},
 	install_requires=['pandas>=0.21.1', 'Jinja2>=2.9.6',
 	],
 	entry_points={'console_scripts': ['qcAssayPortal = qcAssayPortal.__main__:main']},

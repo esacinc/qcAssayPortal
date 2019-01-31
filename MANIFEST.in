@@ -1,4 +1,3 @@
 include src/qcAssayPortal/rScripts/*.R
 include src/qcAssayPortal/skyrTemps/*.skyr
-include src/qcAssayPortal/htmlTemps/*.png
 include src/qcAssayPortal/htmlTemps/*.html
