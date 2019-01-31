@@ -236,8 +236,11 @@
     
     div.skyFileIndex ul{
         font-size: 125%;
-        margin-left: 1.5em;
         font-weight: bold;
+    }
+    
+    .peptideSeq ul {
+        display: inline-block;
     }
 
     </style>
@@ -258,6 +261,7 @@
     </div>
     <div class="main">
         <div class="module"><h2 id="M0">Targeted MS Assays Information</h2>
+            <br />
             <table>
                 <thead>
                     <tr>
@@ -290,6 +294,7 @@
             </table>
         </div>
         <div class="module"><h2 id="M1">Quality of Internal Standard Type</h2>
+            <br />
             <table>
                 <thead>
                     <tr>
@@ -310,6 +315,7 @@
             </table>
         </div>
         <div class="module"><h2 id="M2">Peptides With Errors</h2>
+            <br />
             {% if keptAssayFileErrorTable|length > 0 %}
             <table>
                 <thead>
@@ -358,7 +364,7 @@
             {% if keptAssayFileWarningTable|length > 0 %}
                 {% for skyFile in keptAssayFileWarningTable %} 
                 <div>
-                    <br /><br />
+                    <br />
                     <div class="skyFile" id={{ assayFileAnchorDic[skyFile]["peptideSeqWarnings"] }}>{{ skyFile }}<br />Peptide sequence with warnings:</div><br /><br />
                     <div class="peptideSeq">
                         <ul>
@@ -386,8 +392,15 @@
                         {% endfor %}
                         </ul>
                         {% for imageTmp in peptideOutputDic[skyFile][peptideSeqWarning]["imagePNGbase64"]%}
-                            <span><img src={{ imageTmp }} /></span>
+                            {% if experiment_type == "exp1" %}
+                                <span><img src={{ imageTmp }} class="exp1Display" /></span>
+                            {% elif experiment_type == "exp2" %}
+                                <span><img src={{ imageTmp }} class="exp2Display" /></span>
+                            {% else %}
+                                <span><img src={{ imageTmp }} ></span>
+                            {% endif %}
                         {% endfor %}
+                        <br />
                         <br />
                         {% for tableTmp in peptideOutputDic[skyFile][peptideSeqWarning]["table"] %}
                             {{ tableTmp.to_html(classes="table table-striped1", index=False, border = 0) | safe }}
@@ -400,7 +413,6 @@
                     </div>
                     {% endfor %}
                 </div>
-                <br />
                 {% endfor %}
             {% endif %}
         </div>
@@ -419,7 +431,7 @@
             {% if keptAssayFileWithoutIssueTable|length > 0 %}
                 {% for skyFile in keptAssayFileWithoutIssueTable %} 
                 <div>
-                    <br /><br />
+                    <br />
                     <div class="skyFile" id={{ assayFileAnchorDic[skyFile]["peptideSeqWithoutIssues"] }}>{{ skyFile }}<br />Peptide sequence without issues: </div><br /><br />
                     <div class="peptideSeq">
                         <ul>
@@ -442,9 +454,9 @@
                             <p id={{ peptideTrackAnchorDic[skyFile][peptideSeqWithoutIssue] }} class="seqDisplay">{{ peptideSeqWithoutIssue | join(", precursor charge: ") }}</p>
                         {% endif %}
                         {% for imageTmp in peptideOutputDic[skyFile][peptideSeqWithoutIssue]["imagePNGbase64"]%}
-                            {% if experiment_type == 'exp1' %}
+                            {% if experiment_type == "exp1" %}
                                 <span><img src={{ imageTmp }} class="exp1Display" /></span>
-                            {% elif experiment_type == 'exp2'%}
+                            {% elif experiment_type == "exp2" %}
                                 <span><img src={{ imageTmp }} class="exp2Display" /></span>
                             {% else %}
                                 <span><img src={{ imageTmp }} ></span>
