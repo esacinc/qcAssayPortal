@@ -20,10 +20,12 @@ from distutils.spawn import find_executable
 from zipfile import ZipFile
 import pandas as pd
 import subprocess
+import jinja2
 
 from qcAssayPortal.utils.parseArgument import *
 from qcAssayPortal.utils.qcAnalysis import *
 from qcAssayPortal.utils.fileProcess import *
+from qcAssayPortal.utils.fileParse import *
 
 def main():
 	warnings.filterwarnings("ignore")
@@ -261,9 +263,58 @@ def main():
 	#print fileNameList
 	# Step 2: QC each fileName in fileNameList from normalDf for the specific experiment type by running the corresponding R code.
 	qcAnalysisRcode(experiment_type, outf1, outf2, outf3, mypeptideType_file, RscriptBinary, rScript, plot_output, plot_output_dir)
+	# Step 3: Create the QC_report.html file
+	assayFileList = []
+	assayFileAnchorDic = {}
+	assayInforDic = {}
+	peptideTrackDic = {}
+	peptideTrackAnchorDic = {}
+	peptideSeqChargeIsotopeDic = {}
+	peptideOutputDic = {}
+	peptide_infor_file = os.path.join(plot_output_dir, 'peptide_infor.tsv')
+	# Step 3.1: Parse peptide_infor_file and add the data into assayFileList and assayInforDic
+	peptide_infor_parse(outf3, peptide_infor_file, assayFileList, assayInforDic, peptideTrackDic, peptideSeqChargeIsotopeDic, experiment_type)
+	# Step 3.2: Parse QC_report.tsv and add the data into assayInforDic
+	qc_report_infor_parse(outf1, assayInforDic, peptideTrackDic, peptideOutputDic, assayFileList, experiment_type)
+	# For each key in peptideSeqDisplay, assign an unique anchor id
+	id = 0
+	for item in assayFileList:
+	    peptideTrackAnchorDic.update({item:{}})
+	    for subitem in peptideTrackDic[item]:
+	        id = id + 1
+	        peptideTrackAnchorDic[item][subitem] = "id"+str(id)
+	keptAssayFileErrorTable = []
+	keptAssayFileWarningTable = []
+	keptAssayFileWithoutIssueTable = []
+	
+	id1 = 0
+	for item in assayFileList:
+		if assayInforDic[item]['isQuality'] == 'Correct':
+			if len(assayInforDic[item]['peptideSeqErrors']) > 0:
+				keptAssayFileErrorTable.append(item)
+			if len(assayInforDic[item]['peptideSeqWarnings']) > 0:
+				keptAssayFileWarningTable.append(item)
+				id1 = id1 + 1
+				if item not in assayFileAnchorDic.keys():
+					assayFileAnchorDic.update({item:{}})
+				assayFileAnchorDic[item]['peptideSeqWarnings'] = "skyid"+str(id1)
+			if len(assayInforDic[item]['peptideSeqWithoutIssues']) > 0:
+				keptAssayFileWithoutIssueTable.append(item)
+				id1 = id1 + 1
+				if item not in assayFileAnchorDic.keys():
+					assayFileAnchorDic.update({item:{}})
+				assayFileAnchorDic[item]['peptideSeqWithoutIssues'] = "skyid"+str(id1)
+	
+	# Step 3.3: Render the html template using the data of assayFileList.
+	jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(searchpath=htmlTempsDir))
+	template_file = "report_template.html"
+	template = jinja_env.get_template(template_file)
+	html_rendered = template.render(assayFileList=assayFileList, assayInforDic=assayInforDic, peptideOutputDic=peptideOutputDic, peptideSeqChargeIsotopeDic=peptideSeqChargeIsotopeDic, keptAssayFileErrorTable=keptAssayFileErrorTable, keptAssayFileWarningTable= keptAssayFileWarningTable, keptAssayFileWithoutIssueTable=keptAssayFileWithoutIssueTable, peptideTrackAnchorDic=peptideTrackAnchorDic, experiment_type=experiment_type, assayFileAnchorDic= assayFileAnchorDic)
+	outf4 = os.path.join(outputdir, 'QC_report.html') 
+	with open(outf4, 'w') as handle:
+		handle.write(html_rendered)
 	time3 = time.time()
 	print "It takes %.2fsec."%(time3-time2)
-	
 	
 
 if __name__ == '__main__':
