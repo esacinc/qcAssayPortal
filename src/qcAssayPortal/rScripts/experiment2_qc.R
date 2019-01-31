@@ -159,7 +159,10 @@ logdf <- data.frame(peptide=as.character(), precursorCharge=as.character(), isot
 # Separate the error detecting codes from the warning detecting codes.
 # Traverse the SkyDocumentName in fileDf to detect all the possible errors.
 # Create a list to store the  peptides with errors for each SkyDocumentName.
+# df_skydoc_error_peptide stores the peptides with errors. But there my be one special situation that one specific precursor charge of the peptide has errors but the others don't have error.
+# Therefore, df_skydoc_error_peptide_precursorCharge is used to store peptide plus precursor charge.
 df_skydoc_error_peptide <- list()
+df_skydoc_error_peptide_precursorCharge <- data.frame(SkyDocumentName=as.character(), protein_name=as.character(), peptide=as.character(), precursorCharge=as.character())
 for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
     QC_set1 <- QC_set_total[QC_set_total$SkyDocumentName==SkyDocumentName, ]
     # Get a list of all peptides
@@ -205,6 +208,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     cat(errorInfor)
                     cat('\n')
                     peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
+                    df_skydoc_error_peptide_precursorChargeTmp <- data.frame(SkyDocumentName=SkyDocumentName, protein_name=input_protein_name, peptide=input_peptide_sequence, precursorCharge=input_precursor_charge)
+                    df_skydoc_error_peptide_precursorCharge <- rbind(df_skydoc_error_peptide_precursorCharge, df_skydoc_error_peptide_precursorChargeTmp)
                     next
                 } else {
                     QC_setTmp$isotope_label_type[QC_setTmp$isotope_label_type == "medium"] <- "light"
@@ -262,6 +267,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                         cat(errorInfor)
                         cat('\n')
                         peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
+                        df_skydoc_error_peptide_precursorChargeTmp <- data.frame(SkyDocumentName=SkyDocumentName, protein_name=input_protein_name, peptide=input_peptide_sequence, precursorCharge=input_precursor_charge)
+                        df_skydoc_error_peptide_precursorCharge <- rbind(df_skydoc_error_peptide_precursorCharge, df_skydoc_error_peptide_precursorChargeTmp)
                         next
                     }
                 } else {
@@ -508,7 +515,9 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                 lo_index_new <- concentration_sort[valid_index][length(concentration_sort[valid_index])]
                                 medHLRation_hi <- median(plot_fragment_ion_results[plot_fragment_ion_results$day == day_tmp & plot_fragment_ion_results$sample_group == hi_index_new, ]$calculated_area_ratio, na.rm=TRUE)
                                 medHLRation_lo <- median(plot_fragment_ion_results[plot_fragment_ion_results$day == day_tmp & plot_fragment_ion_results$sample_group == lo_index_new, ]$calculated_area_ratio, na.rm=TRUE)
-                                if (medHLRation_hi >= medHLRation_lo) {
+                                if (is.null(medHLRation_hi) | is.null(medHLRation_lo)) {
+                                    invisible()
+                                } else if (medHLRation_hi >= medHLRation_lo) {
                                     value1 <- value1 + 1
                                 } else {
                                     value2 <- value2 + 1
@@ -571,10 +580,10 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
     }
     QC_set_1 <- QC_set_total[QC_set_total$SkyDocumentName==SkyDocumentName, ]
     peptide_list <- unique(QC_set_1[ , 'peptide'])
-    # Remove the peptides with errors.
-    if (SkyDocumentName %in% names(df_skydoc_error_peptide)) {
-        peptide_list <- setdiff(peptide_list,df_skydoc_error_peptide[[SkyDocumentName]])
-    }
+    # Remove the peptides plus precursorCharge with errors in df_skydoc_error_peptide_precursorCharge
+    #if (SkyDocumentName %in% names(df_skydoc_error_peptide)) {
+    #    peptide_list <- setdiff(peptide_list,df_skydoc_error_peptide[[SkyDocumentName]])
+    #}
     for (input_peptide_sequence in peptide_list) {
         QC_set_2 <- QC_set_1[QC_set_1$peptide==input_peptide_sequence, ]
         precursor_charge_list <- unique(QC_set_2[ , 'precursor_charge'])
@@ -585,6 +594,12 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
             for (indexLabel in 1:length(protein_list)) {
                 input_protein_name <- protein_list[indexLabel]
                 protein_uniProtID <- protein_uniProtID_list[indexLabel]
+                # Judge whether SkyDocumentName, input_protein_name, input_peptide_sequence and input_precursor_charge exist in df_skydoc_error_peptide_precursorCharge
+                if ( nrow(subset(df_skydoc_error_peptide_precursorCharge, SkyDocumentName==SkyDocumentName & protein_name==input_protein_name & peptide==input_peptide_sequence & precursorCharge==input_precursor_charge)) > 0 ) {
+                    # This means that SkyDocumentName, input_protein_name, input_peptide_sequence and input_precursor_charge exist in df_skydoc_error_peptide_precursorCharge
+                    next
+                }
+                
                 QC_set <- QC_set_3[QC_set_3$protein_name==input_protein_name, ]
 
                 fragment_ion_list <- unique(QC_set[ , 'fragment_ion'])
