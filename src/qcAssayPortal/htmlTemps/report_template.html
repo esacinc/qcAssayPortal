@@ -453,6 +453,13 @@
                         {% else %}
                             <p id={{ peptideTrackAnchorDic[skyFile][peptideSeqWithoutIssue] }} class="seqDisplay">{{ peptideSeqWithoutIssue | join(", precursor charge: ") }}</p>
                         {% endif %}
+                        {% if peptideOutputDic[skyFile][peptideSeqWithoutIssue].issueReason is defined %}
+                            <ul>
+                            {% for item in peptideOutputDic[skyFile][peptideSeqWithoutIssue]["issueReason"]%}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                            </ul>
+                        {% endif %}
                         {% for imageTmp in peptideOutputDic[skyFile][peptideSeqWithoutIssue]["imagePNGbase64"]%}
                             {% if experiment_type == "exp1" %}
                                 <span><img src={{ imageTmp }} class="exp1Display" /></span>
