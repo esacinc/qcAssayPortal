@@ -154,17 +154,11 @@ def peptide_infor_parse(is_infor_file, peptide_infor_file, assayFileList, assayI
 				transitionNum = transitionNum + len(item1.split(':')[1].split('|'))
 		assayInforDic[item]['precursorNum'] = precursorNum
 		assayInforDic[item]['transitionNum'] = transitionNum
-		#print item
-		#print is_infor_df[is_infor_df['SkyDocumentName']==item]
-		#print is_infor_df[is_infor_df['SkyDocumentName']==item]['internal_standard']
-		#print is_infor_df[is_infor_df['SkyDocumentName']==item]['internal_standard'][0]
-		#print is_infor_df[is_infor_df['SkyDocumentName']==item]['internal_standard'].values[0]
-		#print type(is_infor_df[is_infor_df['SkyDocumentName']==item]['internal_standard'])
 		assayInforDic[item]['internalStandard'] = is_infor_df[is_infor_df['SkyDocumentName']==item]['internal_standard'].values[0]
 		if experiment_type == 'exp1':
 			assayInforDic[item]['experimentType'] = 'Response Curve'
 		elif experiment_type == 'exp2':
-			assayInforDic[item]['experimentType'] = 'Repeatablitiy'
+			assayInforDic[item]['experimentType'] = 'Repeatability'
 		elif experiment_type == 'exp3':
 			assayInforDic[item]['experimentType'] = 'Selectivity'
 		elif experiment_type == 'exp4':
@@ -236,17 +230,17 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 					peptideOutputDic[item][peptideTerm]['issueReason'].append(issueReason)
 				except KeyError:
 					peptideOutputDic[item][peptideTerm].update({'issueReason':[issueReason]})
-			
+
 			# Find the peptides without issues and add them into assayInforDic and peptideOutputDic.
 			petideTermWithoutIssues = []
 			for subitem in peptideTrackDic[item]:
 				if subitem not in peptideOutputDic[item].keys():
 					petideTermWithoutIssues.append(subitem)
 					try:
-						assayInforDic[item]['peptideSeqWithoutIssues'].append(peptideTerm)
+						assayInforDic[item]['peptideSeqWithoutIssues'].append(subitem)
 					except KeyError:
-						assayInforDic[item].update({'peptideSeqWithoutIssues': [peptideTerm]})
-			# if the issueReason of peptideTerm in assayInforDic[item]['peptideSeqWarnings'] is only "All of the concentrations of the internal standard peptide are zero.",
+						assayInforDic[item].update({'peptideSeqWithoutIssues': [subitem]})
+			# if the issueReason of peptideTerm in assayInforDic[item]['peptideSeqWarnings'] is only "All of the concentrations of the internal standard peptide are zero. The internal standard is assumed to be the endogenous peptide.",
 			# move that peptideTerm into assayInforDic[item]['peptideSeqWithoutIssues']
 			if 'peptideSeqErrors' not in assayInforDic[item].keys():
 				assayInforDic[item]['peptideSeqErrors'] = []
@@ -258,7 +252,7 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 			if len(assayInforDic[item]['peptideSeqWarnings']) > 0:
 				keptPeptideSeqWarningsList = []
 				for peptideTermTmp in assayInforDic[item]['peptideSeqWarnings']:
-					if len(peptideOutputDic[item][peptideTermTmp]['issueReason']) == 1 and peptideOutputDic[item][peptideTermTmp]['issueReason'][0] == "All of the concentrations of the internal standard peptide are zero.":
+					if len(peptideOutputDic[item][peptideTermTmp]['issueReason']) == 1 and peptideOutputDic[item][peptideTermTmp]['issueReason'][0] == "All of the concentrations of the internal standard peptide are zero. The internal standard is assumed to be the endogenous peptide.":
 						try:
 							assayInforDic[item]['peptideSeqWithoutIssues'].append(peptideTermTmp)
 						except KeyError:
@@ -266,7 +260,7 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 					else:
 						keptPeptideSeqWarningsList.append(peptideTermTmp)
 				assayInforDic[item]['peptideSeqWarnings'] = keptPeptideSeqWarningsList
-			
+
 			for peptideTermTmp in petideTermWithoutIssues:
 				if isinstance(peptideTermTmp,tuple):
 					peptide = peptideTermTmp[0]
@@ -290,7 +284,6 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 	for item in assayFileList:
 		if item not in qc_report_infor_df.SkyDocumentName.unique():
 			assayFileWithoutIssueList.append(item)
-	#print assayFileWithoutIssueList
 	for item in assayFileWithoutIssueList:
 		peptideOutputDic.update({item:{}})
 		assayInforDic[item]['isQuality'] = 'Correct'
