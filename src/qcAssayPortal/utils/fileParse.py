@@ -180,7 +180,7 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 	for item in qc_report_infor_df.SkyDocumentName.unique():
 		peptideOutputDic.update({item:{}})
 		qc_report_infor_df_tmp = qc_report_infor_df[qc_report_infor_df['SkyDocumentName'] == item]
-		if "Internal standard" in qc_report_infor_df_tmp['IssueSubtype'].values[0] and qc_report_infor_df_tmp['IssueType'][0] == 'Error':
+		if "Internal standard" in qc_report_infor_df_tmp['IssueSubtype'].values[0] and qc_report_infor_df_tmp['IssueType'].values[0] == 'Error':
 			# It means that all the peptides have errors. No peptideTerm will be added into peptideOutputDic for this skyDocumentName
 			assayInforDic[item]['isQuality'] = qc_report_infor_df_tmp[qc_report_infor_df_tmp['IssueSubtype']=="Internal standard"]['IssueReason'].values[0]+'  Errors happen for all the peptides.'
 			assayInforDic[item]['peptideSeqErrors'] = peptideTrackDic[item]
@@ -189,6 +189,7 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 		else:
 			# It means that peptides may have errors or warnings.
 			assayInforDic[item]['isQuality'] = 'Correct'
+			petideTermWithoutIssuesSpecial = []
 			for index, row in qc_report_infor_df_tmp.iterrows():
 				peptide = row['PeptideModifiedSequence']
 				precursorCharge = row['PrecursorCharge']
@@ -214,6 +215,10 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 						except KeyError:
 							assayInforDic[item].update({'peptideSeqErrors': [peptideTerm]})
 					else:
+						# Pay attention: 
+						# if issueSubtype != "Internal Standard spike peptide concentration" and experiment_type == "exp1"
+						# This kind of warning will be treated as peptide without issue. But the issueReason: "All of the concentrations of the internal standard peptide are zero." will be shown in the output html.
+						# So for the peptideTerm in assayInforDic[item]['peptideSeqWarnings'], the issueReason will evaluated later.
 						try:
 							assayInforDic[item]['peptideSeqWarnings'].append(peptideTerm)
 						except KeyError:
@@ -241,7 +246,27 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 						assayInforDic[item]['peptideSeqWithoutIssues'].append(peptideTerm)
 					except KeyError:
 						assayInforDic[item].update({'peptideSeqWithoutIssues': [peptideTerm]})
-			#print petideTermWithoutIssues
+			# if the issueReason of peptideTerm in assayInforDic[item]['peptideSeqWarnings'] is only "All of the concentrations of the internal standard peptide are zero.",
+			# move that peptideTerm into assayInforDic[item]['peptideSeqWithoutIssues']
+			if 'peptideSeqErrors' not in assayInforDic[item].keys():
+				assayInforDic[item]['peptideSeqErrors'] = []
+			if 'peptideSeqWarnings' not in assayInforDic[item].keys():
+				assayInforDic[item]['peptideSeqWarnings'] = []
+			if 'peptideSeqWithoutIssues' not in assayInforDic[item].keys():
+				assayInforDic[item]['peptideSeqWithoutIssues'] = []
+			
+			if len(assayInforDic[item]['peptideSeqWarnings']) > 0:
+				keptPeptideSeqWarningsList = []
+				for peptideTermTmp in assayInforDic[item]['peptideSeqWarnings']:
+					if len(peptideOutputDic[item][peptideTermTmp]['issueReason']) == 1 and peptideOutputDic[item][peptideTermTmp]['issueReason'][0] == "All of the concentrations of the internal standard peptide are zero.":
+						try:
+							assayInforDic[item]['peptideSeqWithoutIssues'].append(peptideTermTmp)
+						except KeyError:
+							assayInforDic[item].update({'peptideSeqWithoutIssues': [peptideTermTmp]})
+					else:
+						keptPeptideSeqWarningsList.append(peptideTermTmp)
+				assayInforDic[item]['peptideSeqWarnings'] = keptPeptideSeqWarningsList
+			
 			for peptideTermTmp in petideTermWithoutIssues:
 				if isinstance(peptideTermTmp,tuple):
 					peptide = peptideTermTmp[0]
@@ -258,12 +283,6 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 					peptideOutputDic[item][peptideTermTmp].update({'imagePNGbase64':base64String_list})
 					peptideOutputDic[item][peptideTermTmp].update({'table':df_list})
 		# Count the peptides.
-		if 'peptideSeqErrors' not in assayInforDic[item].keys():
-			assayInforDic[item]['peptideSeqErrors'] = []
-		if 'peptideSeqWarnings' not in assayInforDic[item].keys():
-			assayInforDic[item]['peptideSeqWarnings'] = []
-		if 'peptideSeqWithoutIssues' not in assayInforDic[item].keys():
-			assayInforDic[item]['peptideSeqWithoutIssues'] = []
 		assayInforDic[item]['peptideWithErrors'] = countPeptide(assayInforDic[item]['peptideSeqErrors'])
 		assayInforDic[item]['peptideWithWarnings'] = countPeptide(assayInforDic[item]['peptideSeqWarnings'])
 		assayInforDic[item]['peptideWithoutIssues'] = countPeptide(assayInforDic[item]['peptideSeqWithoutIssues'])

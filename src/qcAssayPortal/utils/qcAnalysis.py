@@ -105,7 +105,7 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_di
 		normalDf = pd.concat([normalDf, dfTmp2], ignore_index=True)
 	return errorDf, normalDf
 
-def detectIS(skyFileDir, experiment_type, error_report_path, errorDfColNumber):
+def detectIS(skyFileDir, fileName, experiment_type, error_report_path, errorDfColNumber):
 	# Parse the *.sky file whose format is XML.
 	for event, elem in ET.iterparse(skyFileDir):
 			if event == 'end':
@@ -115,9 +115,9 @@ def detectIS(skyFileDir, experiment_type, error_report_path, errorDfColNumber):
 					# This means that the user doesn't set the Internal Standard Type when preparing data for upload
 					 	#print >> sys.stderr, "Internal_standard value in the peptide_modifications underneath peptide_settings of the *.sky file of %s is unset. Please check it."%(skyFileDir)
 						if internal_standard is None:
-							errorInfor = '\t'.join([os.path.basename(skyFileDir), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is not set.']+['']*(errorDfColNumber-3))+'\n'
+							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is not set.']+['']*(errorDfColNumber-4))+'\n'
 						else:
-							errorInfor = '\t'.join([os.path.basename(skyFileDir), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is set to be none.']+['']*(errorDfColNumber-3))+'\n'
+							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is set to be none.']+['']*(errorDfColNumber-4))+'\n'
 						with open(error_report_path, 'a') as outfTmp:
 							outfTmp.write(errorInfor)
 						internal_standard_type = 'unset'
