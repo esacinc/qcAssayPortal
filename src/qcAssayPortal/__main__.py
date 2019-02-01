@@ -253,12 +253,22 @@ def main():
 	errorDf.to_csv(outf1, sep='\t', header=True, index=False)
 	normalDf.to_csv(outf2, sep='\t', header=True, index=False)
 	# Use the Series in pandas to deduplicate fileName rapidly
-	uniqueSkyFileList = normalDf['SkyDocumentName'].value_counts().index.tolist()
-	fileNameList = [fileName for fileName in fileNameList if fileName in uniqueSkyFileList]
+	#uniqueSkyFileList = normalDf['SkyDocumentName'].value_counts().index.tolist()
+	#fileNameList = [fileName for fileName in fileNameList if fileName in uniqueSkyFileList]
+	skyFileDirListTmp = [os.path.basename(skyFileDir) for skyFileDir in skyFileDirList]
+	if len(skyFileDirListTmp) != len(set(skyFileDirListTmp)):
+		# It means there are duplicated *.sky files afer *.sky.zip files are unzipped, the program will be forced to exit.
+		skyFileDirDup_list = []
+		for item_tmp1 in set(skyFileDirListTmp):
+			if skyFileDirListTmp.count(item_tmp1) > 1:
+				skyFileDirDup_list.append(item_tmp1)
+		print >> sys.stderr, "There are multiple *.sky files with the same name(s) in the input after being unzipped, which are(is) : %s. Please check it."%('; '.join(skyFileDirDup_list))
+		sys.exit(1)
+	
 	with open(outf3, 'w') as outfTmp:
 		outfTmp.write('SkyDocumentName\tinternal_standard\n')
 		for index, item in enumerate(fileNameList):
-			internal_standard = detectIS(skyFileDirList[index], experiment_type, outf1, errorDfColNumber)
+			internal_standard = detectIS(skyFileDirList[index], fileNameList[index], experiment_type, outf1, errorDfColNumber)
 			outfTmp.write(item+'\t'+internal_standard+'\n')
 	#print fileNameList
 	# Step 2: QC each fileName in fileNameList from normalDf for the specific experiment type by running the corresponding R code.
