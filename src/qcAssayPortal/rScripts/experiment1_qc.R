@@ -536,7 +536,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
         errorType <- "Error"
         errorSubtype <- "Internal standard"
         errorReason <- paste('The internal standard in the skyline file is set to be ', original_internal_standard, ', while the inferred internal standard is ', inferred_internal_standard, '.', sep='')
-        errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
+        errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', sep='\t')
         cat(errorInfor)
         cat('\n')
         next
@@ -812,7 +812,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 if (all(df2$ISSpike == 0)) {
                     errorType <- "Warning"
                     errorSubtype <- "Internal Standard spike peptide concentration"
-                    errorReason <- "All of the concentrations of the internal standard peptide are zero."
+                    errorReason <- "All of the concentrations of the internal standard peptide are zero. The internal standard is assumed to be the endogenous peptide."
                     errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
                     cat(errorInfor)
                     cat('\n')
