@@ -204,7 +204,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     errorType <- "Error"
                     errorSubtype <- "Light and Medium isotope"
                     errorReason <- "Both light and medium isotope labels found in the peptide with a specific charge."
-                    errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge, '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
+                    errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge, '', '', '', '', '', '', '', '',sep='\t')
                     cat(errorInfor)
                     cat('\n')
                     peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
@@ -263,7 +263,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                         errorType <- "Error"
                         errorSubtype <- "Area values of heavy or light Isotope"
                         errorReason <- paste(paste(errorReasonTmp, collapse='. '), '.', sep='')
-                        errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge, '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
+                        errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge, '', '', '', '', '', '', '', '',sep='\t')
                         cat(errorInfor)
                         cat('\n')
                         peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
