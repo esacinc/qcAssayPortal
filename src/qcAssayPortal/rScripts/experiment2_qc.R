@@ -13,7 +13,7 @@
 # UPDATE: convert all sample_group values to Lo, Med, Hi based on first character (L, M, H) of sample_group (April 2016)
 
 #library(Cairo) # need for producing PNG image using Panorama
-suppressWarnings(suppressMessages(library(Rlabkey)))
+#suppressWarnings(suppressMessages(library(Rlabkey)))
 suppressWarnings(suppressMessages(library(Cairo)))
 suppressWarnings(suppressMessages(library(stringr)))
 suppressWarnings(suppressMessages(library(evaluate)))

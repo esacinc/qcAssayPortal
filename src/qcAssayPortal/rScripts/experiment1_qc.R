@@ -4,7 +4,7 @@
 # 2) esac-panorama-master\AssayPortal\resources\reports\schemas\targetedms\ResponseCurveAnalysis\ResponseCurveAnalysis.r
 
 suppressWarnings(suppressMessages(library(Cairo)))
-suppressWarnings(suppressMessages(library(Rlabkey)))
+#suppressWarnings(suppressMessages(library(Rlabkey)))
 suppressWarnings(suppressMessages(library(evaluate)))
 suppressWarnings(suppressMessages(library(stringr)))
 suppressWarnings(suppressMessages(require(plyr)))
