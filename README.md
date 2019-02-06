@@ -1,18 +1,18 @@
 qcAssayPortal
 ================================================
 
-A Python program to evaluate the data quality of the five experiments in CPTAC assay portal whose input file formats are *.sky.zip. <br />
-The five experiments are: <br />
-Experiment 1, response curve (or ResponseCurve) <br />
-Experiment 2, evaluation of repeatability (or ValidationSamples) <br />
-Experiment 3, selectivity (or Seletivity) <br />
-Experiment 4, stability (Stability) <br />
-Experiment 5, reproducible detection of endogenous analyte (Endogenous) <br />
+A Python program to evaluate the data quality of the five experiments in CPTAC assay portal, the format of input files is *.sky.zip.
+The experiments are: 
+Experiment 1, response curve (or ResponseCurve)
+Experiment 2, evaluation of repeatability (or ValidationSamples)
+Experiment 3, selectivity (or Seletivity)
+Experiment 4, stability (Stability)
+Experiment 5, reproducible detection of endogenous analyte (Endogenous)
 
-The work flow of qcAssayPortal is shown in src/qcAssayPortal/doc/workflow.pdf. <br />
+The work flow of qcAssayPortal is shown in workflow.pdf. 
 
-A report file will be generated which will capture the details of errors and warnings when running the R codes for the individual experiment. <br />
-The details of the errors and warnings are listed in src/qcAssayPortal/doc/issue_categories.pdf <br />
+A report file will be generated which will capture the details of errors and warnings when running the R codes for the individual experiment.
+The details of the errors and warnings are listed in issue_categories.pdf
 
 Documentation
 -------------
@@ -20,7 +20,7 @@ Documentation
 * [Installation](#installation)
   * [Install qcAssayPortal](#install-qcAssayPortal)
 * [How to use it](#how-to-use-it)
-  * [Command line](#command-line)
+  * [Command line](#command line)
 * [Changelog](#changelog)
 * [Citation](#citation)
 
@@ -31,8 +31,8 @@ Installation
 
 qcAssayPortal is implemented as a Python program running on a Windows platform that requires pre-installation of Skyline https://skyline.ms/project/home/software/Skyline/begin.view and R https://cran.r-project.org/bin/windows/base/  <br />
 For Python (v2.7.*) programming language, it requires Python-related libraries, including pandas(>= v0.21.0) and Jinja2(v2.9.6). <br />
-For R (v.3.3.1) programming language, it requires R-related libraries, including Cairo, evaluate, MASS and dplyr.  <br />
-For Skyline (v4.2), it requires preinstalled Skyline command-line interface https://skyline.ms/_webdav/home/software/Skyline/@files/docs/Skyline%20Command-Line%20Interface-3_7.pdf. <br />
+For R (v3.5.* is recommended) programming language, it requires R-related libraries, including Cairo, evaluate, stringr, plyr, MASS ggplot2 and dplyr. In order to install required libraries, please run install.packages() in the R console. <br />
+For Skyline (v4.2 is recommended), it requires pre-installed Skyline command-line interface https://skyline.ms/_webdav/home/software/Skyline/@files/docs/Skyline%20Command-Line%20Interface-3_7.pdf. Or Install Skyline administrator downloaded from https://skyline.ms/wiki/home/software/Skyline/page.view?name=install-administator-64. The command-line toolSkylineCmd.exe can be found in the installation directory. <br />
 
 qcAssayPortal can be installed from the source code by pip:<br />
 1) Download qcAssayPortal source code from URL and unzip the zipped file folder.<br />
