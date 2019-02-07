@@ -11,10 +11,10 @@ Experiment 5, reproducible detection of endogenous analyte (Endogenous)<br />
 
 The current version supports Experiment 1 and Experiment 2.
 
-The work flow of qcAssayPortal is shown in workflow.pdf. 
+The work flow of qcAssayPortal is shown in .\src\qcAssayPortal\doc\workflow.pdf. 
 
 A report file (QC_report.html)will be generated which will capture the details of errors and warnings when running the R codes for the individual experiment.
-The details of the errors and warnings are listed in issue_categories.pdf
+The details of the errors and warnings are listed in .\src\qcAssayPortal\doc\issue_categories.pdf
 
 Documentation
 -------------
