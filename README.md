@@ -40,7 +40,7 @@ qcAssayPortal can be installed from the source code by pip:<br />
 1) Download qcAssayPortal source code from URL and unzip the zipped file folder.<br />
 2) If the package of wheel is not installed, run `pip install wheel` to install it.<br />
 3) Change the directory to qcAssayPortal's directory and run `python setup.py bdist_wheel` to build a wheel file for the subsequent installation via pip.<br />
-4) Run `pip install ./dist/qcAssayPortal-1.0-py2-none-any.whl` to install qcAssayPortal.<br />
+4) Run `pip install .\\dist\\qcAssayPortal-1.1-py2-none-any.whl` to install qcAssayPortal.<br />
 
 
 How to use it
