@@ -12,7 +12,7 @@ with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'README.md')
 
 setup(
 	name='qcAssayPortal',
-	version='1.0',
+	version='1.1',
 	author='Yin Lu',
 	author_email='yin.lu@esacinc.com',
 	description='Quality control of the five experiments in CPTAC assay portal',
