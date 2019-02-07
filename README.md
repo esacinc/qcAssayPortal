@@ -8,6 +8,7 @@ Experiment 2, evaluation of repeatability (or ValidationSamples)
 Experiment 3, selectivity (or Seletivity)
 Experiment 4, stability (Stability)
 Experiment 5, reproducible detection of endogenous analyte (Endogenous)
+The current version supports Experiment 1 and Experiment 2.
 
 The work flow of qcAssayPortal is shown in workflow.pdf. 
 
