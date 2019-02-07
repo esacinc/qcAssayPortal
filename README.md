@@ -2,7 +2,7 @@ qcAssayPortal
 ================================================
 
 A Python program to evaluate the data quality of the five experiments in CPTAC assay portal, the format of input files is *.sky.zip.
-The experiments are: 
+The experiments are:<br />
 Experiment 1, response curve (or ResponseCurve)
 Experiment 2, evaluation of repeatability (or ValidationSamples)
 Experiment 3, selectivity (or Seletivity)
