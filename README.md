@@ -1,18 +1,18 @@
 qcAssayPortal
 ================================================
 
-A Python program to evaluate the data quality of the five experiments in CPTAC assay portal, the format of input files is *.sky.zip.
+A Python program to evaluate the data quality of the five experiments in CPTAC assay portal, the format of input files is *.sky.zip.<br />
 The experiments are:<br />
-Experiment 1, response curve (or ResponseCurve)
-Experiment 2, evaluation of repeatability (or ValidationSamples)
-Experiment 3, selectivity (or Seletivity)
-Experiment 4, stability (Stability)
+Experiment 1, response curve (or ResponseCurve)<br />
+Experiment 2, evaluation of repeatability (or ValidationSamples)<br />
+Experiment 3, selectivity (or Seletivity)<br />
+Experiment 4, stability (Stability)<br />
 Experiment 5, reproducible detection of endogenous analyte (Endogenous)<br />
 The current version supports Experiment 1 and Experiment 2.
 
 The work flow of qcAssayPortal is shown in workflow.pdf. 
 
-A report file will be generated which will capture the details of errors and warnings when running the R codes for the individual experiment.
+A report file (QC_report.html)will be generated which will capture the details of errors and warnings when running the R codes for the individual experiment.
 The details of the errors and warnings are listed in issue_categories.pdf
 
 Documentation
