@@ -241,7 +241,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                 light_error <- ''
                             }
                             if (heavyCount != 1) {
-                                heavy_error <- paste(heavyCount, ' light isotopes')
+                                heavy_error <- paste(heavyCount, ' heavy isotopes')
                             } else {
                                 heavy_error <- ''
                             }
