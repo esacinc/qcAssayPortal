@@ -58,7 +58,7 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_di
 		waived_col_id_list = [s for s, item in enumerate(df.columns.tolist()) if item in waived_col_list]
 		#print waived_col_id_list
 		dfTmp1, dfTmp2 = select_rows(df, search_strings, waived_col_id_list)
-		#print dfTmp1.shape[0]
+		#print dfTmp1.shape
 		removedPeptideList = []
 		if dfTmp1.shape[0] > 0:
 			col_name = dfTmp1.columns.tolist()
@@ -67,7 +67,18 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_di
 			col_name.insert(3,'IssueReason')
 			dfTmp1 = dfTmp1.reindex(columns=col_name)
 			waived_col_id_list_update = [s for s, item in enumerate(dfTmp1.columns.tolist()) if item in waived_col_list]
-			dfTmp1['IssueType'], dfTmp1['IssueSubtype'], dfTmp1['IssueReason']= dfTmp1.apply(lambda row: locate_missing([row[colName] for colName in dfTmp1.columns.values], list(dfTmp1.columns.values), search_strings, waived_col_id_list_update), axis=1)
+			#print dfTmp1
+			#print waived_col_id_list_update
+			resultTmp= dfTmp1.apply(lambda row: locate_missing([row[colName] for colName in dfTmp1.columns.values], list(dfTmp1.columns.values), search_strings, waived_col_id_list_update), axis=1)
+			# resultTmp is a Series
+			indexTmp1 = 0
+			# suppress SettingWithCopyWarning
+			pd.options.mode.chained_assignment = None
+			for indexTmp, itemTmp in resultTmp.iteritems():
+				dfTmp1['IssueType'][dfTmp1.index[indexTmp1]] = itemTmp[0]
+				dfTmp1['IssueSubtype'][dfTmp1.index[indexTmp1]] = itemTmp[1]
+				dfTmp1['IssueReason'][dfTmp1.index[indexTmp1]] = itemTmp[2]
+				indexTmp1 = indexTmp1 + 1
 			errorDf = pd.concat([errorDf, dfTmp1],  ignore_index=True)
 			# Deduplicate the 'PeptideModifiedSequence' with the PrecursorCharge
 			peptideList = list(set(dfTmp1['PeptideModifiedSequence']+'$$$$'+dfTmp1['PrecursorCharge']))
@@ -125,11 +136,14 @@ def detectIS(skyFileDir, fileName, experiment_type, error_report_path, errorDfCo
 						internal_standard_type = 'none'
 					else:
 						internal_standard_type = internal_standard
+					# Since in exp3,exp4 and exp5, the default internal standard should alway be heavy, the internal_standard will be force into heavy.
+					if experiment_type=='exp3' or experiment_type=='exp4' or experiment_type == 'exp5':
+						internal_standard_type = 'heavy'
 			elem.clear()
 	return internal_standard_type
 
 def qcAnalysisRcode(experiment_type, error_report_path, dataset_path, fileList_path, mypeptideType_file_path, RscriptBinary, rScript, plot_output, plot_output_dir):
-	if experiment_type == 'exp2':
+	if experiment_type == 'exp2' or experiment_type == 'exp5':
 		os.system('"%s" %s %s %s %s %s >> %s'%(RscriptBinary, rScript, dataset_path, fileList_path, plot_output, plot_output_dir, error_report_path))
 	if experiment_type == 'exp1':
 		os.system('"%s" %s %s %s %s %s %s >> %s'%(RscriptBinary, rScript, dataset_path, fileList_path, plot_output, plot_output_dir, mypeptideType_file_path, error_report_path))
