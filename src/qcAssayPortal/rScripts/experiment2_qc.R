@@ -85,7 +85,7 @@ plot_output_dir <- args[4]
 #dataset_path <- "normal_data.tsv"
 #fileList_path <- "file_namelist_IS.tsv"
 #plot_output <- "True"
-#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\qcAssayPortal\\src\\qcAssayPortal\\rScripts\\test\\debug_exp2\\tmp"
+#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\data\\CPTAC_TEST_Experiment_ALL_TEST_old_template\\ValidationSamples\\exp2.2019-04-11_11-57-54\\figures_tables.tmp"
 
 
 
@@ -120,8 +120,12 @@ colnames(QC_set_total)[colnames(QC_set_total)=="replicate"] <- "replicate"
 colnames(QC_set_total)[colnames(QC_set_total)=="concentration"] <- "concentration"      # day
 colnames(QC_set_total)[colnames(QC_set_total)=="samplegroup"] <- "sample_group"     # Lo, Med, Hi
 
-QC_set_total$fragment_ion <- paste(QC_set_total[ ,'fragment_ion_only'], " (", QC_set_total[ ,'product_charge'], "+)", sep='' )
-
+if (nrow(QC_set_total) ==0) {
+  QC_set_total$fragment_ion <- integer(0)
+} else {
+  QC_set_total$fragment_ion <- paste(QC_set_total[ ,'fragment_ion_only'], " (", QC_set_total[ ,'product_charge'], "+)", sep='' )
+}
+  
 # Preprocess the columns in QC_set_total
 # convert columns from character to numeric
 QC_set_total[,'concentration'] <- as.numeric(as.character(QC_set_total[,'concentration']))
@@ -139,12 +143,15 @@ QC_set_total[,'fragment_ion_only'] <- as.character(QC_set_total[,'fragment_ion_o
 QC_set_total[,'replicate_name'] <- as.character(QC_set_total[,'replicate_name'])
 QC_set_total[,'fragment_ion'] <- as.character(QC_set_total[,'fragment_ion'])
 QC_set_total[,'sample_group'] <- as.character(QC_set_total[,'sample_group'])
-QC_set_total[,'sample_group'] <- as.character(QC_set_total[,'sample_group'])
+#QC_set_total[,'sample_group'] <- as.character(QC_set_total[,'sample_group'])
 
 # Convert all sample_group values to Lo, Med, Hi based on first character of sample_group
-QC_set_total[toupper(substr(QC_set_total$sample_group, 1, 1))=="L","sample_group"] <- "Lo"
-QC_set_total[toupper(substr(QC_set_total$sample_group, 1, 1))=="M","sample_group"] <- "Med"
-QC_set_total[toupper(substr(QC_set_total$sample_group, 1, 1))=="H","sample_group"] <- "Hi"
+if (nrow(QC_set_total) > 0) {
+  QC_set_total[toupper(substr(QC_set_total$sample_group, 1, 1))=="L","sample_group"] <- "Lo"
+  QC_set_total[toupper(substr(QC_set_total$sample_group, 1, 1))=="M","sample_group"] <- "Med"
+  QC_set_total[toupper(substr(QC_set_total$sample_group, 1, 1))=="H","sample_group"] <- "Hi"
+}
+
 
 # Initialize an empty data.frame QC_set_filtered with the column names same as QC_set_total's.
 #QC_set_filtered = data.frame()

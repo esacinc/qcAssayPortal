@@ -232,7 +232,11 @@ labkey.data.total[,'peptideconcentration'] <-  as.numeric(as.character(labkey.da
 labkey.data.total[,'multiplicationfactor'] <-  as.numeric(as.character(labkey.data.total[,'multiplicationfactor']))
 
 # Add a new temporary column fragment_ion_complete
-labkey.data.total$fragment_ion_complete <- paste(labkey.data.total[ ,'fragmention'], " (", labkey.data.total[ ,'productcharge'], "+)", sep='' )
+if (nrow(labkey.data.total) ==0) {
+    labkey.data.total$fragment_ion_complete <- integer(0)
+} else {
+    labkey.data.total$fragment_ion_complete <- paste(labkey.data.total[ ,'fragmention'], " (", labkey.data.total[ ,'productcharge'], "+)", sep='' )
+}
 
 # Write peptide information into output file.
 log_filename <- paste(plot_output_dir, "\\peptide_infor.tsv", sep='' )
