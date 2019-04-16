@@ -130,6 +130,7 @@ def main():
 	outf1 = os.path.join(outputdir, 'QC_report.tsv')
 	outf2 = os.path.join(outputdir, 'normal_data.tsv')
 	outf3 = os.path.join(outputdir, 'file_namelist_IS.tsv')
+	outf5 = os.path.join(outputdir, 'peptide_excluded_in_Rscript_infor.tsv')
 	
 	SkylineCmdBinary = args.SkylineCmdBinary
 	# Check the binaries directory to make sure it can work
@@ -248,10 +249,11 @@ def main():
 	# Step 1: QC each *.sky in skyTsvDirList
 	# In this step, the peptides with missing values and duplicated peptides will be stored in errorDf, the rest peptides will be stored in normalDf
 	print "QC of %s is running..."%(reportName)
-	errorDf, normalDf = qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_dic)
+	errorDf, normalDf, peptide_excluded_in_Rscript_Df = qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_dic)
 	errorDfColNumber = errorDf.columns.size
 	errorDf.to_csv(outf1, sep='\t', header=True, index=False)
 	normalDf.to_csv(outf2, sep='\t', header=True, index=False)
+	peptide_excluded_in_Rscript_Df.to_csv(outf5, sep='\t', header=True, index=False)
 	# Use the Series in pandas to deduplicate fileName rapidly
 	#uniqueSkyFileList = normalDf['SkyDocumentName'].value_counts().index.tolist()
 	#fileNameList = [fileName for fileName in fileNameList if fileName in uniqueSkyFileList]
@@ -283,23 +285,23 @@ def main():
 	peptideOutputDic = {}
 	peptide_infor_file = os.path.join(plot_output_dir, 'peptide_infor.tsv')
 	# Step 3.1: Parse peptide_infor_file and add the data into assayFileList and assayInforDic
-	peptide_infor_parse(outf3, peptide_infor_file, assayFileList, assayInforDic, peptideTrackDic, peptideSeqChargeIsotopeDic, experiment_type)
+	peptide_infor_parse(outf3, peptide_infor_file, outf5, assayFileList, assayInforDic, peptideTrackDic, peptideSeqChargeIsotopeDic, experiment_type)
 	# Step 3.2: Parse QC_report.tsv and add the data into assayInforDic
 	qc_report_infor_parse(outf1, assayInforDic, peptideTrackDic, peptideOutputDic, assayFileList, experiment_type)
 	# For each key in peptideSeqDisplay, assign an unique anchor id
 	id = 0
 	for item in assayFileList:
-	    peptideTrackAnchorDic.update({item:{}})
-	    for subitem in peptideTrackDic[item]:
-	        id = id + 1
-	        peptideTrackAnchorDic[item][subitem] = "id"+str(id)
+		peptideTrackAnchorDic.update({item:{}})
+		for subitem in peptideTrackDic[item]:
+			id = id + 1
+			peptideTrackAnchorDic[item][subitem] = "id"+str(id)
 	keptAssayFileErrorTable = []
 	keptAssayFileWarningTable = []
 	keptAssayFileWithoutIssueTable = []
 	
 	id1 = 0
 	for item in assayFileList:
-		if assayInforDic[item]['isQuality'] == 'Correct':
+		if assayInforDic[item]['isQuality'] == 'Correct' or assayInforDic[item]['isQuality'] == "Internal standard type can't be inferred. All the peptides have missing values or incorrect data types in some essential attributes.":
 			if len(assayInforDic[item]['peptideSeqErrors']) > 0:
 				keptAssayFileErrorTable.append(item)
 			if len(assayInforDic[item]['peptideSeqWarnings']) > 0:
