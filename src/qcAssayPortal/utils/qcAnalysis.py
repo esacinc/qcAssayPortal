@@ -4,6 +4,7 @@ import time
 import pandas as pd
 import numpy as np
 import xml.etree.ElementTree as ET
+import re
 
 def select_rows_old(df,search_strings):
 	# This function is to return the rows which contain all of the strings in search_strings
@@ -31,6 +32,22 @@ def locate_missing(valueList, colNameList, match, waived_list):
 	outList = [colNameList[index] for index, value in enumerate(valueList) if (value in match) and (index not in waived_list)]
 	return "Error", "Attribute", "Essential attribute(s) has(have) missing values, including "+'; '.join(outList)+'.'
 
+def identify_uniProtKB_entryID(proteinName):
+# This function is to extract uniProtKB_entryID from the protein name.
+	if '|' in proteinName:
+		tmp = proteinName.split('|')
+		uniProtKB_entryID_tmp = tmp[1]
+		# Judge whether uniProtKB_entryID is a legal uniProtKB entry ID based on its pattern using regular expression. Please refer to https://www.uniprot.org/help/accession_numbers
+		pattern = re.compile('[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}')
+		match = pattern.match(uniProtKB_entryID_tmp)
+		if match:
+			uniProtKB_entryID = uniProtKB_entryID_tmp
+		else:
+			uniProtKB_entryID = proteinName
+	else:
+		uniProtKB_entryID = proteinName
+	return uniProtKB_entryID
+
 def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_dic):
 	# Check all the *.tsv files in skyTsvDirList to make sure all of them exist,
 	# Otherwise, it means some *.sky.zip files are not successfully transformed into *.tsv file via SkylineCMd and an error will be yielded.
@@ -44,6 +61,7 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_di
 	# If one sky document file lacks one column data, the exported .tsv file will assign missing values to this this column.
 	errorDf = pd.DataFrame(columns=['SkyDocumentName', 'IssueType', 'IssueSubtype', 'IssueReason']+list(dfTemplate.columns.values))
 	normalDf = pd.DataFrame(columns=['SkyDocumentName']+list(dfTemplate.columns.values))
+	peptide_excluded_in_Rscript_Df = pd.DataFrame(columns=['peptide', 'precursorCharge', 'isotopeLabelType', 'transition', 'uniProtKBID', 'proteinName', 'SkyDocumentName'])
 	# Step 1: detect missing values "" without regard to the waived_col of the specific the experiment type
 	search_strings = ['']
 	waived_col_list = waived_col_dic[experiment_type]
@@ -91,30 +109,36 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_di
 			removedPeptide1 = removedPeptide.split('$$$$')[0]
 			removedPeptide2 = removedPeptide.split('$$$$')[1]
 			dfTmp2 = dfTmp2[~((dfTmp2['PeptideModifiedSequence'] == removedPeptide1) & (dfTmp2['PrecursorCharge'] == removedPeptide2))]
-		
-		#dfTmp2 = dfTmp2[~dfTmp2['PeptideModifiedSequence'].isin(removedPeptideList)]
-		# Detect whether there are PeptideModifiedSequences from dfTmp2 which exist in normalDf
-		# Because current normalDf is empty, it's unnecessary to do it now. Comment the bellow codes.
-		#normalDfPeptideList = list(set(normalDf['PeptideModifiedSequence']))
-		#dfTmp2Peptideist = list(set(dfTmp2['PeptideModifiedSequence']))
-		#duplicatedPeptideList = [item for item in dfTmp2Peptideist if item in normalDfPeptideList]
-		#dfTmp3 = dfTmp2[dfTmp2['PeptideModifiedSequence'].isin(duplicatedPeptideList)]
-		#col_name1 = dfTmp3.columns.tolist()
-		#col_name1.insert(1,'IssueType')
-		#col_name1.insert(2,'IssueSubtype')
-		#col_name1.insert(3,'IssueReason')
-		#dfTmp3 = dfTmp3.reindex(columns=col_name1)
-		#dfTmp3['IssueType'] = 'Error'
-		#dfTmp3['IssueSubtype'] = 'Duplicated peptide'
-		#dfTmp3['IssueReason'] = 'Duplicated peptide modified sequences exist'
-		# add the duplicated peptideModifidedSequence into errorDf
-		#errorDf = pd.concat([errorDf, dfTmp3],  ignore_index=True)
-		# remove the duplicated peptideModifidedSequence in dfTmp2
-		#dfTmp2 = dfTmp2[~dfTmp2['PeptideModifiedSequence'].isin(duplicatedPeptideList)]
-		
 		# Add the dfTmp2 into normalDf
 		normalDf = pd.concat([normalDf, dfTmp2], ignore_index=True)
-	return errorDf, normalDf
+		# Extract the information of the removed peptides.
+		for removedPeptide in removedPeptideList:
+			removedPeptide1 = removedPeptide.split('$$$$')[0]
+			removedPeptide2 = removedPeptide.split('$$$$')[1]
+			dfTmp3 = df[(df['PeptideModifiedSequence']==removedPeptide1) & (df['PrecursorCharge']==removedPeptide2)]
+			dfTmp3['fragment_ion_complete'] = dfTmp3['FragmentIon']+" ("+dfTmp3['ProductCharge']+"+)"
+			peptide_list = dfTmp3['PeptideModifiedSequence'].unique()
+			for input_peptide_sequence in peptide_list:
+				dfTmp4 = dfTmp3[(dfTmp3['PeptideModifiedSequence']==input_peptide_sequence)]
+				protein_list = dfTmp3['ProteinName'].unique()
+				protein_uniProtID_list = [identify_uniProtKB_entryID(protein_tmp) for protein_tmp in protein_list]
+				for indexLabel, protein_tmp in enumerate(protein_list):
+					protein_uniProtID = protein_uniProtID_list[indexLabel]
+					dfTmp5 = dfTmp4[(dfTmp4['ProteinName']==protein_tmp)]
+					for precursorchargeTmp in dfTmp5['PrecursorCharge'].unique():
+						dfTmp6 = dfTmp5[(dfTmp5['PrecursorCharge']==precursorchargeTmp)]
+						isotopeLabelType_list = dfTmp6['IsotopeLabelType'].unique()
+						isotopeLabelType_list.sort()
+						isotopeLabelTypeTmp = '|'.join(isotopeLabelType_list)
+						transitionTmp = []
+						for isotopeLabelTypeSubtmp in isotopeLabelType_list:
+							fragmentIon_list = dfTmp6[(dfTmp6['IsotopeLabelType']==isotopeLabelTypeSubtmp)]['fragment_ion_complete'].unique()
+							fragmentIon_list.sort()
+							transitionTmp.append(':'.join([isotopeLabelTypeSubtmp, '|'.join(fragmentIon_list)]))
+						transitionTmp = ';'.join(transitionTmp)
+						peptide_excluded_in_Rscript_Df_tmp = pd.DataFrame({'peptide':[input_peptide_sequence], 'precursorCharge':[precursorchargeTmp], 'isotopeLabelType':[isotopeLabelTypeTmp], 'transition':[transitionTmp], 'uniProtKBID':[protein_uniProtID], 'proteinName':[protein_tmp], 'SkyDocumentName':[fileNameList[i]]}, columns=['peptide', 'precursorCharge', 'isotopeLabelType', 'transition', 'uniProtKBID', 'proteinName', 'SkyDocumentName'])
+						peptide_excluded_in_Rscript_Df = pd.concat([peptide_excluded_in_Rscript_Df, peptide_excluded_in_Rscript_Df_tmp],  ignore_index=True)
+	return errorDf, normalDf, peptide_excluded_in_Rscript_Df
 
 def detectIS(skyFileDir, fileName, experiment_type, error_report_path, errorDfColNumber):
 	# Parse the *.sky file whose format is XML.
