@@ -48,15 +48,25 @@ def identify_uniProtKB_entryID(proteinName):
 		uniProtKB_entryID = proteinName
 	return uniProtKB_entryID
 
-def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_dic):
+def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_dic, waived_col_dic, fileNameSkylineTmpTypeDic):
 	# Check all the *.tsv files in skyTsvDirList to make sure all of them exist,
 	# Otherwise, it means some *.sky.zip files are not successfully transformed into *.tsv file via SkylineCMd and an error will be yielded.
-	failedList = [fileNameList[i] for i, item in enumerate(skyTsvDirList) if not os.path.isfile(item)]
-	if len(failedList) >0:
-		print >> sys.stderr, "The file(s) which is(are): %s can't be opened by Skyline. Please check the version compatibility between Skyline document and Skyline program."%(", ".join(failedList))
-		sys.exit(1)
+	#failedList = [fileNameList[i] for i, item in enumerate(skyTsvDirList) if not os.path.isfile(item)]
+	#if len(failedList) >0:
+	#	print >> sys.stderr, "The file(s) which is(are): %s can't be opened by Skyline. Please check the version compatibility between Skyline document and Skyline program."%(", ".join(failedList))
+	#	sys.exit(1)
+	# Only keep the required columns based on required_col_dic
+	if experiment_type in ['exp1', 'exp2']:
+		fileNameSelceted = fileNameSkylineTmpTypeDic.keys()[0]
+		skylineTemp_type =  fileNameSkylineTmpTypeDic[fileNameSelceted]
+		required_col_list = required_col_dic[experiment_type][skylineTemp_type]
+		waived_col_list = waived_col_dic[experiment_type][skylineTemp_type]
+	else:
+		required_col_list = required_col_dic[experiment_type]
+		waived_col_list = waived_col_dic[experiment_type]
 	# touch the first skyFile
 	dfTemplate = pd.read_csv(skyTsvDirList[0], sep='\t', header=0, converters={i: str for i in range(0, 100)})
+	dfTemplate = dfTemplate[required_col_list]
 	# Because the exported .tsv files are based on the skyline report template, they must have the same column information.
 	# If one sky document file lacks one column data, the exported .tsv file will assign missing values to this this column.
 	errorDf = pd.DataFrame(columns=['SkyDocumentName', 'IssueType', 'IssueSubtype', 'IssueReason']+list(dfTemplate.columns.values))
@@ -64,10 +74,11 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_di
 	peptide_excluded_in_Rscript_Df = pd.DataFrame(columns=['peptide', 'precursorCharge', 'isotopeLabelType', 'transition', 'uniProtKBID', 'proteinName', 'SkyDocumentName'])
 	# Step 1: detect missing values "" without regard to the waived_col of the specific the experiment type
 	search_strings = ['']
-	waived_col_list = waived_col_dic[experiment_type]
+	#waived_col_list = waived_col_dic[experiment_type]
 	for i, skyFileDir in enumerate(skyTsvDirList):
 		# Read the *.tsv file into dataframe and keep all the values in the format of string. 
 		df = pd.read_csv(skyFileDir, sep='\t', header=0, converters={i: str for i in range(0, 100)})
+		df = df[required_col_list]
 		# Add 'SkyDocumentName' into df as the first column
 		col_name1 = df.columns.tolist()
 		col_name1.insert(0, 'SkyDocumentName')

@@ -237,14 +237,16 @@ def peptide_infor_parse(is_infor_file, peptide_infor_file, peptide_excluded_in_R
 			else:
 				assayInforDic[item]['experimentType'] = 'Endogenous'
 
-def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptideOutputDic, assayFileList, experiment_type):
+def qc_report_infor_parse(qc_report_file, is_inferred_file, assayInforDic, peptideTrackDic, peptideOutputDic, assayFileList, experiment_type):
 	dir_tmp = os.path.join(os.path.dirname(qc_report_file), 'figures_tables.tmp')
 	file_list = os.listdir(dir_tmp)
 	#print file_list
 	qc_report_infor_df = pd.read_csv(qc_report_file, sep='\t', header=0, converters={i: str for i in range(0, 100)})
+	is_inferred_infor_df = pd.read_csv(is_inferred_file, sep='\t', header=0, converters={i: str for i in range(0, 100)})
 	for item in qc_report_infor_df.SkyDocumentName.unique():
 		peptideOutputDic.update({item:{}})
 		qc_report_infor_df_tmp = qc_report_infor_df[qc_report_infor_df['SkyDocumentName'] == item]
+		is_inferred_tmp = is_inferred_infor_df[is_inferred_infor_df['SkyDocumentName'] == item]['internal_standard'].iloc[0]
 		if not assayInforDic[item]['status']:
 			# It means that all of the peptides in this sky document have missing attribute issues which will cause errors.
 			assayInforDic[item]['isQuality'] = "Internal standard type can't be inferred. All the peptides have missing values or incorrect data types in some essential attributes."
@@ -282,7 +284,10 @@ def qc_report_infor_parse(qc_report_file, assayInforDic, peptideTrackDic, peptid
 			assayInforDic[item]['peptideSeqWithoutIssues'] = []
 		else:
 			# It means that peptides may have errors or warnings.
-			assayInforDic[item]['isQuality'] = 'Correct'
+			if is_inferred_tmp in ["can't be inferred", "unset"]:
+				assayInforDic[item]['isQuality'] = "Internal standard type can't be inferred. All the peptides have errors in some essential attributes."
+			else:
+				assayInforDic[item]['isQuality'] = 'Correct'
 			for index, row in qc_report_infor_df_tmp.iterrows():
 				peptide = row['PeptideModifiedSequence']
 				precursorCharge = row['PrecursorCharge']
