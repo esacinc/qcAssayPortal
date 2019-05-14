@@ -37,6 +37,7 @@ def main():
 	skyrTempsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'skyrTemps')
 	rScriptsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'rScripts')
 	htmlTempsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'htmlTemps')
+	"""
 	if experiment_type == 'exp1':
 		skyrTemp = os.path.join(skyrTempsDir, "experiment1.skyr")
 		rScript = os.path.join(rScriptsDir, "experiment1_qc.R")
@@ -60,16 +61,34 @@ def main():
 	else:
 		print >> sys.stderr, "Invalid experiment type. Please check it."
 		sys.exit(1)
-	
-	# In the exported *.tsv from skyline document, there will be some columns where missing values are allowed.
-	# A dictionary is defined for exp1, exp2, exp3, exp4 and exp5
-	waived_col_dic = {'exp1':['Area','Background','Concentration', 'PeptideConcentration', 'ISSpike', 'PeptideConcentrationIS','MultiplicationFactor', 'donotuse'],
-					'exp2':['Area', 'PeptideConcentration'],
+	"""
+	if experiment_type not in ['exp1', 'exp2', 'exp3', 'exp4', 'exp5']:
+		print >> sys.stderr, "Invalid experiment type. Please check it."
+		sys.exit(1)
+	skyrTemp = os.path.join(skyrTempsDir, "qcAssayPortal_report.skyr")
+	reportName = "qcAssayPortal_report"
+
+    # The required columns for exp1, exp2, exp3, exp4 and exp5 are defined in a dictionary.
+    
+	common_col_list = ['ProteinName', 'PeptideModifiedSequence', 'IsotopeLabelType', 'PrecursorCharge', 'ProductCharge', 'FragmentIon', 'Area', 'ReplicateName']
+	required_col_dic = {'exp1':{'old':common_col_list+['Replicate', 'Background', 'SampleGroup', 'ISSpike', 'PeptideConcentrationIS', 'Concentration', 'PeptideConcentration', 'MultiplicationFactor', 'donotuse'],
+							'new':common_col_list+['ReplicateNumber', 'Background', 'SampleGroup', 'InternalStandardConcentration', 'AnalyteConcentration', 'ConcentrationMultiplier', 'donotuse']},
+					'exp2':{'old':common_col_list+['Replicate', 'Concentration', 'SampleGroup'],
+						    'new':common_col_list+['ReplicateNumber', 'Day', 'SampleGroup']},
 					'exp3':[],
 					'exp4':[],
-					'exp5':[],
+					'exp5':['Area', 'AnalyteConcentration', 'Replicate'],
 					}
-	
+	# In the exported *.tsv from skyline document, there will be some columns where missing values are allowed.
+	# A dictionary is defined for exp1, exp2, exp3, exp4 and exp5
+	waived_col_dic = {'exp1':{'old':['Area','Background','Concentration', 'PeptideConcentration', 'ISSpike', 'PeptideConcentrationIS','MultiplicationFactor', 'donotuse'],
+				              'new':['Area','Background','ConcentrationMultiplier', 'donotuse']},
+					'exp2':{'old':['Area'],
+						    'new':['Area']},
+					'exp3':[],
+					'exp4':[],
+					'exp5':['Area', 'AnalyteConcentration', 'Replicate'],
+					}
 	
 	mypeptideType_file = args.mypeptideType_file
 	if experiment_type == 'exp1':
@@ -131,7 +150,7 @@ def main():
 	outf2 = os.path.join(outputdir, 'normal_data.tsv')
 	outf3 = os.path.join(outputdir, 'file_namelist_IS.tsv')
 	outf5 = os.path.join(outputdir, 'peptide_excluded_in_Rscript_infor.tsv')
-	
+
 	SkylineCmdBinary = args.SkylineCmdBinary
 	# Check the binaries directory to make sure it can work
 	#SkylineCmdBinary = os.path.join(SkylineCmdBinary, 'SkylineCmd.exe')
@@ -191,7 +210,7 @@ def main():
 	# If experiment_type == 'exp1', judge whether all the *.sky.zip files have peptide_standard_purity types by comparing with the mypeptideType_file.
 	if experiment_type == 'exp1':
 		if len(skyzip_file_dir_basename_list_raw) != len(mypeptideType_Dic):
-			print >> sys.stderr, "The number of *.sky.zip files in %s is not euqal to those in the input of the parameter -i. Please check it." %(mypeptideType_file)
+			print >> sys.stderr, "The number of *.sky.zip files in %s is not equal to those in the input of the parameter -i. Please check it." %(mypeptideType_file)
 			sys.exit(1)
 		for fileName in skyzip_file_dir_basename_list_raw:
 			if fileName not in mypeptideType_Dic.keys():
@@ -206,6 +225,7 @@ def main():
 	skyFileDirList = []
 	pandasList = []
 	fileNameList = []
+	fileNameSkylineTmpTypeDic = {}
 	for skyzip_file_dir in skyzip_file_dir_list:
 		zf = ZipFile(skyzip_file_dir, 'r')
 		zf.extractall(skyFileTmpdir)
@@ -239,17 +259,61 @@ def main():
 		#os.system('"%s" --timestamp --in="%s" --report-file="%s" --report-format=TSV --report-name=%s --report-add=%s --report-conflict-resolution=overwrite --report-invariant >> %s'%(SkylineCmdBinary, input_file_sky, output_file, reportName, skyrTemp, skylineCmdLog))
 		#os.system('"%s" --timestamp --in=%s --report-file=%s --report-format=TSV --report-name=%s --report-add=%s --report-conflict-resolution=overwrite >> %s'%(SkylineCmdBinary, input_file_sky, output_file, reportName, skyrTemp, skylineCmdLog))
 		output_file_new = os.path.join(skyFileTmpdir, input_file_sky_tmp[:-4]+'.tsv')
-		headerModify(output_file, output_file_new)
+		# judge whether output_file is successfully generated or not
+		if os.path.isfile(output_file):
+			for rowNumber, line in enumerate(open(output_file, 'rU')):
+			   pass
+			rowNumber += 1
+			if rowNumber < 2:
+				print >> sys.stderr, "The *.sky file in %s is blank after been parsed by %s. Please check it."%(skyzip_file_dir, SkylineCmdBinary)
+				sys.exit(1)
+		else:
+			print >> sys.stderr, "The file %s can't be accessed by %s. Please check the version compatibility between Skyline document and Skyline program."%(skyzip_file_dir, SkylineCmdBinary)
+			sys.exit(1)
+		
+		# Judge which skyline template is used when experiment_type is exp1 or exp2. For example, new or old
+		# Meanwhile, the output_file will be modified accordingly.
+		skylineTempType = headerModify(output_file, output_file_new, experiment_type)
 		skyTsvDirList.append(output_file_new)
 		skyFileDirList.append(input_file_sky)
 		fileNameList.append(os.path.basename(skyzip_file_dir))
+		fileNameSkylineTmpTypeDic.update({os.path.basename(skyzip_file_dir):skylineTempType})
+	# Because for exp1 and exp2, there may be two skyline templates. All the input *.sky.zip files must share the same template, otherwise, an error will be thrown and the program will be stopped.
+	if experiment_type in ['exp1', 'exp2']:
+		if len(set([fileNameSkylineTmpTypeDic[fileName] for fileName in fileNameList])) > 1:
+			print >> sys.stderr, "The input *.sky.zip files are not annotated using the same Skyline template. Please check them in Skyline.\n"%(", ".join(fileNameList))
+			sys.exit(1)
+
 	time2 = time.time()
 	skylineCmdLogOutf.close()
+	if experiment_type == 'exp1':
+		fileNameSelceted = fileNameSkylineTmpTypeDic.keys()[0]
+		skylineTemp_type =  fileNameSkylineTmpTypeDic[fileNameSelceted]
+		if skylineTemp_type == 'old':
+			rScript = os.path.join(rScriptsDir, "experiment1_oldTemplate_qc.R")
+		else:
+			rScript = os.path.join(rScriptsDir, "experiment1_newTemplate_qc.R")
+	elif experiment_type == 'exp2':
+		fileNameSelceted = fileNameSkylineTmpTypeDic.keys()[0]
+		skylineTemp_type =  fileNameSkylineTmpTypeDic[fileNameSelceted]
+		if skylineTemp_type == 'old':
+			rScript = os.path.join(rScriptsDir, "experiment2_oldTemplate_qc.R")
+		else:
+			rScript = os.path.join(rScriptsDir, "experiment2_newTemplate_qc.R")
+	elif experiment_type == 'exp3':
+		rScript = os.path.join(rScriptsDir, "experiment3_qc.R")
+	elif experiment_type == 'exp4':
+		rScript = os.path.join(rScriptsDir, "experiment4_qc.R")
+		reportName="experiment4"
+	else :
+		rScript = os.path.join(rScriptsDir, "experiment5_qc.R")
+		reportName="experiment5"
+	
 	print "It takes %.2fsec."%(time2-time1)
 	# Step 1: QC each *.sky in skyTsvDirList
 	# In this step, the peptides with missing values and duplicated peptides will be stored in errorDf, the rest peptides will be stored in normalDf
 	print "QC of %s is running..."%(reportName)
-	errorDf, normalDf, peptide_excluded_in_Rscript_Df = qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, waived_col_dic)
+	errorDf, normalDf, peptide_excluded_in_Rscript_Df = qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_dic, waived_col_dic, fileNameSkylineTmpTypeDic)
 	errorDfColNumber = errorDf.columns.size
 	errorDf.to_csv(outf1, sep='\t', header=True, index=False)
 	normalDf.to_csv(outf2, sep='\t', header=True, index=False)
@@ -284,10 +348,11 @@ def main():
 	peptideSeqChargeIsotopeDic = {}
 	peptideOutputDic = {}
 	peptide_infor_file = os.path.join(plot_output_dir, 'peptide_infor.tsv')
+	is_inferred_file = os.path.join(plot_output_dir, 'internal_standard_inferred_infor.tsv')
 	# Step 3.1: Parse peptide_infor_file and add the data into assayFileList and assayInforDic
 	peptide_infor_parse(outf3, peptide_infor_file, outf5, assayFileList, assayInforDic, peptideTrackDic, peptideSeqChargeIsotopeDic, experiment_type)
 	# Step 3.2: Parse QC_report.tsv and add the data into assayInforDic
-	qc_report_infor_parse(outf1, assayInforDic, peptideTrackDic, peptideOutputDic, assayFileList, experiment_type)
+	qc_report_infor_parse(outf1, is_inferred_file, assayInforDic, peptideTrackDic, peptideOutputDic, assayFileList, experiment_type)
 	# For each key in peptideSeqDisplay, assign an unique anchor id
 	id = 0
 	for item in assayFileList:
@@ -301,7 +366,7 @@ def main():
 	
 	id1 = 0
 	for item in assayFileList:
-		if assayInforDic[item]['isQuality'] == 'Correct' or assayInforDic[item]['isQuality'] == "Internal standard type can't be inferred. All the peptides have missing values or incorrect data types in some essential attributes.":
+		if assayInforDic[item]['isQuality'] in ['Correct', "Internal standard type can't be inferred. All the peptides have missing values or incorrect data types in some essential attributes.", "Internal standard type can't be inferred. All the peptides have errors in some essential attributes."]:
 			if len(assayInforDic[item]['peptideSeqErrors']) > 0:
 				keptAssayFileErrorTable.append(item)
 			if len(assayInforDic[item]['peptideSeqWarnings']) > 0:
