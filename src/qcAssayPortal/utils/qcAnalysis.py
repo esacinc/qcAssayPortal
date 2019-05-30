@@ -28,6 +28,15 @@ def select_rows(df, match, waived_col_id_list):
 	df_out2 = df[~ids]
 	return df_out1, df_out2
 
+def check_missing(listToCheck):
+	# If status is True, that means listToCheck has '' or missing values exist.
+	status = False
+	for item in listToCheck:
+		if item == '':
+			status = True
+			break
+	return status
+
 def locate_missing(valueList, colNameList, match, waived_list):
 	outList = [colNameList[index] for index, value in enumerate(valueList) if (value in match) and (index not in waived_list)]
 	return "Error", "Attribute", "Essential attribute(s) has(have) missing values, including "+'; '.join(outList)+'.'
@@ -77,7 +86,7 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_
 	#waived_col_list = waived_col_dic[experiment_type]
 	for i, skyFileDir in enumerate(skyTsvDirList):
 		# Read the *.tsv file into dataframe and keep all the values in the format of string. 
-		df = pd.read_csv(skyFileDir, sep='\t', header=0, converters={i: str for i in range(0, 100)})
+		df = pd.read_csv(skyFileDir, sep='\t', header=0, converters={j: str for j in range(0, 100)})
 		df = df[required_col_list]
 		# Add 'SkyDocumentName' into df as the first column
 		col_name1 = df.columns.tolist()
@@ -116,6 +125,48 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_
 		# The peptides in dfTmp1[''] will be removed from dfTmp2, because the peptide information is 
 		# incomplete and these peptides should not be exported into *.tsv file for downstream R code.
 		# Pay attention: If part of data for one peptide sequence have missing value and the rest part don't have missing value, all the rows of this peptide with specific precursor charge will be removed.
+		for removedPeptide in removedPeptideList:
+			removedPeptide1 = removedPeptide.split('$$$$')[0]
+			removedPeptide2 = removedPeptide.split('$$$$')[1]
+			dfTmp2 = dfTmp2[~((dfTmp2['PeptideModifiedSequence'] == removedPeptide1) & (dfTmp2['PrecursorCharge'] == removedPeptide2))]
+		# Look into dfTmp2 to detect potential missing values and incorrect data type for some columns.
+		fileNameSelceted = fileNameList[i]
+		skylineTemp_type =  fileNameSkylineTmpTypeDic[fileNameSelceted]
+		# Traverse PeptideModifiedSequence in dfTmp2
+		PeptideModifiedSequenceList = set(dfTmp2['PeptideModifiedSequence'].tolist())
+		for peptideSeq in PeptideModifiedSequenceList:
+			dfTmp2_1 = dfTmp2[dfTmp2['PeptideModifiedSequence'] == peptideSeq]
+			# Traverse PrecursorCharge in dfTmp2_1
+			PrecursorChargeList = set(dfTmp2_1['PrecursorCharge'].tolist())
+			for precursorCharge in PrecursorChargeList:
+				dfTmp2_2 = dfTmp2_1[dfTmp2_1['PrecursorCharge'] == precursorCharge]
+				#print dfTmp2_2
+				# Step 1: If experiment_type is 'exp1', check whether there are missing values in ISSpike or PeptideConcentrationIS, Concentration or PeptideConcentration and MultiplicationFactor
+				if experiment_type == 'exp1' and skylineTemp_type == 'old':
+					iSSpikeStatus = check_missing(dfTmp2_2['ISSpike'].tolist())
+					peptideConcentrationISStatus = check_missing(dfTmp2_2['PeptideConcentrationIS'].tolist())
+					concentrationStatus = check_missing(dfTmp2_2['Concentration'].tolist())
+					peptideConcentrationStatus = check_missing(dfTmp2_2['PeptideConcentration'].tolist())
+					multiplicationFactorStatus = check_missing(dfTmp2_2['MultiplicationFactor'].tolist())
+					if (iSSpikeStatus and peptideConcentrationISStatus) or (concentrationStatus and (peptideConcentrationStatus or multiplicationFactorStatus)):
+						errorDfTmp = pd.DataFrame(columns=['SkyDocumentName', 'IssueType', 'IssueSubtype', 'IssueReason']+list(dfTemplate.columns.values))
+						skyDocumentName = dfTmp2_2['SkyDocumentName'].tolist()[0]
+						issueType = "Error"
+						issueSubtype = "Attribute"
+						proteinName = dfTmp2_2['ProteinName'].tolist()[0]
+						columnsWithIssue = []
+						if iSSpikeStatus and peptideConcentrationISStatus:
+							columnsWithIssue.append('ISSpike or PeptideConcentrationIS')
+						if concentrationStatus and (peptideConcentrationStatus or multiplicationFactorStatus):
+							columnsWithIssue.append('Concentration or PeptideConcentration and MultiplicationFactor')
+						issueReason = "Essential attribute(s) has(have) missing values, including "+'; '.join(columnsWithIssue)+'.'
+						errorDfTmp.loc[len(errorDfTmp)] = [skyDocumentName, issueType, issueSubtype, issueReason, proteinName, peptideSeq, '', precursorCharge] + ['']*(errorDfTmp.shape[1]-8)
+						errorDf = pd.concat([errorDf, errorDfTmp],  ignore_index=True)
+						# Deduplicate the 'PeptideModifiedSequence' with the PrecursorCharge
+						peptideList = list(set(dfTmp2_2['PeptideModifiedSequence']+'$$$$'+dfTmp2_2['PrecursorCharge']))
+						#peptideList = list(set(dfTmp2_2['PeptideModifiedSequence']))
+						removedPeptideList = removedPeptideList + peptideList
+				# Step 2: Check the data type of some required columns. This need to be done later.
 		for removedPeptide in removedPeptideList:
 			removedPeptide1 = removedPeptide.split('$$$$')[0]
 			removedPeptide2 = removedPeptide.split('$$$$')[1]
