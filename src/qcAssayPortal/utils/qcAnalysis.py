@@ -14,6 +14,30 @@ def select_rows_old(df,search_strings):
 	df_out2 = df[~((IDs.reshape(df.shape) == unqIDs[:,None,None]).any(-1)).all(0)]
 	return df_out1, df_out2
 
+def is_number(s):
+	try:
+		f = float(s)
+		if f!=f or f == float('inf') or f == float('-inf'):
+			return False
+		return True
+	except ValueError:
+		return False
+
+def infer_dataType(s):
+	if s.isdigit():
+		if int(s) == 0:
+			data_type = 'zero integer'
+		else:
+			data_type = 'integer'
+	elif is_number(s):
+		if s >= 0:
+			data_type = 'number'
+		else:
+			data_type = 'negative number'
+	else:
+		data_type = 'text'
+	return data_type
+
 def string_finder(row, words, waived_list):
 	# row is a type of Series.
 	row1 = row.tolist()
@@ -57,7 +81,7 @@ def identify_uniProtKB_entryID(proteinName):
 		uniProtKB_entryID = proteinName
 	return uniProtKB_entryID
 
-def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_dic, waived_col_dic, fileNameSkylineTmpTypeDic):
+def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_dic, waived_col_dic, fileNameSkylineTmpTypeDic, col_dataType_dic):
 	# Check all the *.tsv files in skyTsvDirList to make sure all of them exist,
 	# Otherwise, it means some *.sky.zip files are not successfully transformed into *.tsv file via SkylineCMd and an error will be yielded.
 	#failedList = [fileNameList[i] for i, item in enumerate(skyTsvDirList) if not os.path.isfile(item)]
@@ -70,9 +94,11 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_
 		skylineTemp_type =  fileNameSkylineTmpTypeDic[fileNameSelceted]
 		required_col_list = required_col_dic[experiment_type][skylineTemp_type]
 		waived_col_list = waived_col_dic[experiment_type][skylineTemp_type]
+		col_dataType_forCheck_dic = col_dataType_dic[experiment_type][skylineTemp_type]
 	else:
 		required_col_list = required_col_dic[experiment_type]
 		waived_col_list = waived_col_dic[experiment_type]
+		col_dataType_forCheck_dic = col_dataType_dic[experiment_type]
 	# touch the first skyFile
 	dfTemplate = pd.read_csv(skyTsvDirList[0], sep='\t', header=0, converters={i: str for i in range(0, 100)})
 	dfTemplate = dfTemplate[required_col_list]
@@ -125,10 +151,12 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_
 		# The peptides in dfTmp1[''] will be removed from dfTmp2, because the peptide information is 
 		# incomplete and these peptides should not be exported into *.tsv file for downstream R code.
 		# Pay attention: If part of data for one peptide sequence have missing value and the rest part don't have missing value, all the rows of this peptide with specific precursor charge will be removed.
-		for removedPeptide in removedPeptideList:
-			removedPeptide1 = removedPeptide.split('$$$$')[0]
-			removedPeptide2 = removedPeptide.split('$$$$')[1]
-			dfTmp2 = dfTmp2[~((dfTmp2['PeptideModifiedSequence'] == removedPeptide1) & (dfTmp2['PrecursorCharge'] == removedPeptide2))]
+		#
+		#for removedPeptide in removedPeptideList:
+		#	removedPeptide1 = removedPeptide.split('$$$$')[0]
+		#	removedPeptide2 = removedPeptide.split('$$$$')[1]
+		#	dfTmp2 = dfTmp2[~((dfTmp2['PeptideModifiedSequence'] == removedPeptide1) & (dfTmp2['PrecursorCharge'] == removedPeptide2))]
+		#
 		# Look into dfTmp2 to detect potential missing values and incorrect data type for some columns.
 		fileNameSelceted = fileNameList[i]
 		skylineTemp_type =  fileNameSkylineTmpTypeDic[fileNameSelceted]
@@ -165,8 +193,36 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_
 						# Deduplicate the 'PeptideModifiedSequence' with the PrecursorCharge
 						peptideList = list(set(dfTmp2_2['PeptideModifiedSequence']+'$$$$'+dfTmp2_2['PrecursorCharge']))
 						#peptideList = list(set(dfTmp2_2['PeptideModifiedSequence']))
-						removedPeptideList = removedPeptideList + peptideList
+						for item in peptideList:
+							if item not in removedPeptideList:
+								removedPeptideList.append(item)
 				# Step 2: Check the data type of some required columns. This need to be done later.
+				col_dataType_forCheck_list = col_dataType_forCheck_dic.keys()
+				col_with_wrong_dataType_list = []
+				for col_name in col_dataType_forCheck_list:
+					col1 = set([infer_dataType(item) for item in dfTmp2_2[col_name].tolist() if item != ''])
+					col2 = col_dataType_forCheck_dic[col_name]
+					if all([item in col2  for item in col1]):
+						pass
+					else:
+						# This column has unqualified data type.
+						unqualified_dataType = [item for item in col1 if item not in col2]
+						unqualified_dataType_infor = 'Attribute "' + col_name + '" is annotated using ' + ', '.join(unqualified_dataType)
+						col_with_wrong_dataType_list.append(unqualified_dataType_infor)
+				if len(col_with_wrong_dataType_list) > 0:
+					errorDfTmp = pd.DataFrame(columns=['SkyDocumentName', 'IssueType', 'IssueSubtype', 'IssueReason']+list(dfTemplate.columns.values))
+					skyDocumentName = dfTmp2_2['SkyDocumentName'].tolist()[0]
+					issueType = "Error"
+					issueSubtype = "Attribute"
+					proteinName = dfTmp2_2['ProteinName'].tolist()[0]
+					issueReason = "Essential attribute(s) has(have) unqualified data types: " + '; '.join(col_with_wrong_dataType_list)+'.'
+					errorDfTmp.loc[len(errorDfTmp)] = [skyDocumentName, issueType, issueSubtype, issueReason, proteinName, peptideSeq, '', precursorCharge] + ['']*(errorDfTmp.shape[1]-8)
+					errorDf = pd.concat([errorDf, errorDfTmp],  ignore_index=True)
+					# Deduplicate the 'PeptideModifiedSequence' with the PrecursorCharge
+					peptideList = list(set(dfTmp2_2['PeptideModifiedSequence']+'$$$$'+dfTmp2_2['PrecursorCharge']))
+					for item in peptideList:
+						if item not in removedPeptideList:
+							removedPeptideList.append(item)
 		for removedPeptide in removedPeptideList:
 			removedPeptide1 = removedPeptide.split('$$$$')[0]
 			removedPeptide2 = removedPeptide.split('$$$$')[1]
