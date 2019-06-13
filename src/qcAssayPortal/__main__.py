@@ -74,10 +74,23 @@ def main():
 	required_col_dic = {'exp1':{'old':common_col_list+['Replicate', 'Background', 'SampleGroup', 'ISSpike', 'PeptideConcentrationIS', 'Concentration', 'PeptideConcentration', 'MultiplicationFactor', 'donotuse'],
 							'new':common_col_list+['ReplicateNumber', 'Background', 'SampleGroup', 'InternalStandardConcentration', 'AnalyteConcentration', 'ConcentrationMultiplier', 'donotuse']},
 					'exp2':{'old':common_col_list+['Replicate', 'Concentration', 'SampleGroup'],
-						    'new':common_col_list+['ReplicateNumber', 'Day', 'SampleGroup']},
-					'exp3':[],
-					'exp4':[],
-					'exp5':['Area', 'AnalyteConcentration', 'Replicate'],
+						    'new':common_col_list+['ReplicateNumber', 'Day', 'Exp2SampleGroup']},
+					'exp3':common_col_list+['ReplicateNumber', 'AnalyteConcentration', 'Exp3SampleGroup'],
+					'exp4':common_col_list+['ReplicateNumber', 'Exp4SampleGroup', 'Temperature', 'Time', 'TimeUnits', 'FreezeThawCycles'],
+					'exp5':common_col_list+['ReplicateNumber', 'Day', 'SampleGroup']
+					}
+	# A dictionary about the data types for several required columns is defined. The '' is ignored automatically when judging the data type.
+	# The data types of the required columns will be checked subsequently.
+	# If the content of the column is in a controlled vocabulary, the values will be checked as well.
+	col_dataType_dic = {'exp1':{'old':{'Replicate':('integer'), 'ISSpike':('integer', 'zero integer', 'number'), 'PeptideConcentrationIS':('integer', 'zero integer', 'number'), 'Concentration':('integer', 'zero integer', 'number'), 'PeptideConcentration':('integer', 'zero integer', 'number'), 'MultiplicationFactor':('integer', 'zero integer', 'number')},
+							'new':{'ReplicateNumber':('integer'), 'InternalStandardConcentration':('integer', 'zero integer', 'number'), 'AnalyteConcentration':('integer', 'zero integer', 'number'), 'ConcentrationMultiplier':('integer', 'zero integer', 'number')}
+							},
+					'exp2':{'old':{'Replicate':('integer'), 'Concentration':('integer')}, 
+					       'new':{'Replicate':('integer'), 'Day':('integer')}
+					      	},
+					'exp3':{'ReplicateNumber':('integer'), 'AnalyteConcentration':('integer', 'zero integer', 'number')},
+					'exp4':{'ReplicateNumber':('integer'), 'Temperature':('number', 'negative number'), 'Time':('number'), 'FreezeThawCycles':('integer', 'zero integer')},
+					'exp5':{'ReplicateNumber':('integer'), 'Day':('integer')}
 					}
 	# In the exported *.tsv from skyline document, there will be some columns where missing values are allowed.
 	# A dictionary is defined for exp1, exp2, exp3, exp4 and exp5
@@ -85,9 +98,9 @@ def main():
 				              'new':['Area','Background','ConcentrationMultiplier', 'donotuse']},
 					'exp2':{'old':['Area'],
 						    'new':['Area']},
-					'exp3':[],
-					'exp4':[],
-					'exp5':['Area', 'AnalyteConcentration', 'Replicate'],
+					'exp3':['Area'],
+					'exp4':['Area'],
+					'exp5':['Area'],
 					}
 	
 	mypeptideType_file = args.mypeptideType_file
@@ -226,6 +239,8 @@ def main():
 	pandasList = []
 	fileNameList = []
 	fileNameSkylineTmpTypeDic = {}
+	fileNameEmptyStatusDic = {}
+	fileNameInferredExpStatusDic = {}
 	for skyzip_file_dir in skyzip_file_dir_list:
 		zf = ZipFile(skyzip_file_dir, 'r')
 		zf.extractall(skyFileTmpdir)
@@ -271,17 +286,29 @@ def main():
 			print >> sys.stderr, "The file %s can't be accessed by %s. Please check the version compatibility between Skyline document and Skyline program."%(skyzip_file_dir, SkylineCmdBinary)
 			sys.exit(1)
 		
-		# Judge which skyline template is used when experiment_type is exp1 or exp2. For example, new or old
-		# Meanwhile, the output_file will be modified accordingly.
-		skylineTempType = headerModify(output_file, output_file_new, experiment_type)
+		# Firstly, modify the output_file. If the row number of output_file is 0, True will be stored in fileNameEmptyStatusDic.
+		# Then, infer the experiment Type based on output_file_new,
+		# if the inferred experiment type is inconsistent with the experiment type from input arguments, True will be stored in fileNameInferredExpStatusDic.
+		# Meanwhile, judge which skyline template is used when experiment_type is exp1 or exp2. For example, new or old
+		skylineTempType = headerModify(output_file, output_file_new, experiment_type, subitem, fileNameInferredExpStatusDic, fileNameEmptyStatusDic)
 		skyTsvDirList.append(output_file_new)
 		skyFileDirList.append(input_file_sky)
 		fileNameList.append(os.path.basename(skyzip_file_dir))
 		fileNameSkylineTmpTypeDic.update({os.path.basename(skyzip_file_dir):skylineTempType})
+	# If some Skyline files are blank, the program will stop and error message will be printed.
+	if any([fileNameEmptyStatusDic[fileName] for fileName in fileNameList]):
+		fileNameBlankList = [fileName for fileName in fileNameList if fileNameEmptyStatusDic[fileName]]
+		print >> sys.stderr, "The input *.sky.zip file(s), including %s, has(have) no data. Please check it(them) in Skyline.\n"%(", ".join(fileNameBlankList))
+		sys.exit(1)
+	# If the inferred experiment type is different from the input one for some Skyline files, the program will stop and error message will be printed.
+	if any([fileNameInferredExpStatusDic[fileName] for fileName in fileNameList]):
+		fileNameWrongExpList = [fileName for fileName in fileNameList if fileNameInferredExpStatusDic[fileName]]
+		print >> sys.stderr, "The experiment type(s) of the input *.sky.zip file(s), including %s, is(are) wrong according to the annotated attributes. Please check it(them) in Skyline.\n"%(", ".join(fileNameWrongExpList))
+		sys.exit(1)
 	# Because for exp1 and exp2, there may be two skyline templates. All the input *.sky.zip files must share the same template, otherwise, an error will be thrown and the program will be stopped.
 	if experiment_type in ['exp1', 'exp2']:
 		if len(set([fileNameSkylineTmpTypeDic[fileName] for fileName in fileNameList])) > 1:
-			print >> sys.stderr, "The input *.sky.zip files are not annotated using the same Skyline template. Please check them in Skyline.\n"%(", ".join(fileNameList))
+			print >> sys.stderr, "The input *.sky.zip files, including %s, are not annotated using the same Skyline template. Please check them in Skyline.\n"%(", ".join(fileNameList))
 			sys.exit(1)
 
 	time2 = time.time()
@@ -313,7 +340,7 @@ def main():
 	# Step 1: QC each *.sky in skyTsvDirList
 	# In this step, the peptides with missing values and duplicated peptides will be stored in errorDf, the rest peptides will be stored in normalDf
 	print "QC of %s is running..."%(reportName)
-	errorDf, normalDf, peptide_excluded_in_Rscript_Df = qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_dic, waived_col_dic, fileNameSkylineTmpTypeDic)
+	errorDf, normalDf, peptide_excluded_in_Rscript_Df = qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_dic, waived_col_dic, fileNameSkylineTmpTypeDic, col_dataType_dic)
 	errorDfColNumber = errorDf.columns.size
 	errorDf.to_csv(outf1, sep='\t', header=True, index=False)
 	normalDf.to_csv(outf2, sep='\t', header=True, index=False)
