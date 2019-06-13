@@ -69,7 +69,7 @@ How to use it
 
 Changelog
 ---------
-2019-06-13 Add a function to QA the experiment type from the input parameter.
+2019-06-13 Add a function to QA the experiment type from the input parameter.<br />
            Add a function to QA the data type of several required attributes.
 
 Citation
