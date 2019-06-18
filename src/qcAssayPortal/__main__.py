@@ -86,7 +86,7 @@ def main():
 							'new':{'ReplicateNumber':('integer'), 'InternalStandardConcentration':('integer', 'zero integer', 'number'), 'AnalyteConcentration':('integer', 'zero integer', 'number'), 'ConcentrationMultiplier':('integer', 'zero integer', 'number')}
 							},
 					'exp2':{'old':{'Replicate':('integer'), 'Concentration':('integer')}, 
-					       'new':{'Replicate':('integer'), 'Day':('integer')}
+					       'new':{'ReplicateNumber':('integer'), 'Day':('integer')}
 					      	},
 					'exp3':{'ReplicateNumber':('integer'), 'AnalyteConcentration':('integer', 'zero integer', 'number')},
 					'exp4':{'ReplicateNumber':('integer'), 'Temperature':('number', 'negative number'), 'Time':('number'), 'FreezeThawCycles':('integer', 'zero integer')},
