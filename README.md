@@ -9,7 +9,7 @@ Experiment 3, selectivity (or Seletivity)<br />
 Experiment 4, stability (Stability)<br />
 Experiment 5, reproducible detection of endogenous analyte (Endogenous)<br />
 
-The current version supports Experiment 1 and Experiment 2.
+The current version supports Experiment 1 and Experiment 2 in old and new templates.
 
 The work flow of qcAssayPortal is shown in .\src\qcAssayPortal\doc\workflow.pdf. 
 
