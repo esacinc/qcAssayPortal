@@ -69,6 +69,7 @@ How to use it
 
 Changelog
 ---------
+2019-05-31 Add a function to infer which template (new or old) is being applied to annotate the data for experiment 1 and experiment 2.<br />
 2019-06-13 Add a function to QA the experiment type from the input parameter.<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add a function to QA the data type of several required attributes.
 
