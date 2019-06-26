@@ -33,7 +33,7 @@ Installation
 
 qcAssayPortal is implemented as a Python program running on a Windows platform that requires pre-installation of Skyline https://skyline.ms/project/home/software/Skyline/begin.view and R https://cran.r-project.org/bin/windows/base/  <br /><br />
 For Python (v2.7.\*) programming language, it requires Python-related libraries, including pandas(>= v0.21.0) and Jinja2(v2.9.6). <br /><br />
-For R (v3.5.\* is recommended) programming language, it requires R-related libraries, including Cairo, evaluate, stringr, plyr, MASS, ggplot2, reshape2 and dplyr. In order to install required libraries, please run `install.packages(c("Cairo", "evaluate", "reshape2", "stringr", "plyr", "MASS", "ggplot2", "dplyr"))` in the R console. <br /><br />
+For R (v3.5.\* is recommended) programming language, it requires R-related libraries, including Cairo, evaluate, stringr, plyr, MASS, ggplot2, reshape2 and dplyr. In order to install required libraries, please run `install.packages(c("Cairo", "evaluate", "stringr", "plyr", "MASS", "ggplot2", "reshape2", "dplyr"))` in the R console. <br /><br />
 For Skyline (v4.2 is recommended), it requires pre-installed Skyline command-line interface https://skyline.ms/_webdav/home/software/Skyline/@files/docs/Skyline%20Command-Line%20Interface-3_7.pdf. Or install Skyline administrator downloaded from https://skyline.ms/wiki/home/software/Skyline/page.view?name=install-administator-64. The command-line toolSkylineCmd.exe can be found in the installation directory. <br />
 
 qcAssayPortal can be installed from the source code by pip:<br />
