@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import xml.etree.ElementTree as ET
 import re
+import subprocess
 
 def select_rows_old(df,search_strings):
 	# This function is to return the rows which contain all of the strings in search_strings
@@ -286,6 +287,8 @@ def detectIS(skyFileDir, fileName, experiment_type, error_report_path, errorDfCo
 
 def qcAnalysisRcode(experiment_type, error_report_path, dataset_path, fileList_path, mypeptideType_file_path, RscriptBinary, rScript, plot_output, plot_output_dir):
 	if experiment_type == 'exp2' or experiment_type == 'exp5':
-		os.system('"%s" %s %s %s %s %s >> %s'%(RscriptBinary, rScript, dataset_path, fileList_path, plot_output, plot_output_dir, error_report_path))
+		#os.system('"%s" %s %s %s %s %s >> %s'%(RscriptBinary, rScript, dataset_path, fileList_path, plot_output, plot_output_dir, error_report_path))
+		subprocess.call([RscriptBinary, rScript, dataset_path, fileList_path, str(plot_output), plot_output_dir, ">>", error_report_path])
 	if experiment_type == 'exp1':
-		os.system('"%s" %s %s %s %s %s %s >> %s'%(RscriptBinary, rScript, dataset_path, fileList_path, plot_output, plot_output_dir, mypeptideType_file_path, error_report_path))
+		#os.system('"%s" %s %s %s %s %s %s >> %s'%(RscriptBinary, rScript, dataset_path, fileList_path, plot_output, plot_output_dir, mypeptideType_file_path, error_report_path))
+		subprocess.call([RscriptBinary, rScript, dataset_path, fileList_path, str(plot_output), plot_output_dir, mypeptideType_file_path, ">>", error_report_path])
