@@ -594,11 +594,10 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
     # Evaluate the internal_standard, if the internal standard is wrong, errors will arise.
     original_internal_standard <- as.character(fileDf[fileDf$SkyDocumentName == SkyDocumentName, ]$internal_standard)
     inferred_internal_standard <- as.character(df_internal_standard_inferred[df_internal_standard_inferred$SkyDocumentName == SkyDocumentName, ]$internal_standard)
-     # For experiment 2, the original_internal_standard in unlikely to be 'none'. Because it has already been transformed into 'unset'.
     if (inferred_internal_standard[1] == "can't be inferred") {
         next
     }
-    if (original_internal_standard[1] == 'unset') {
+    if (original_internal_standard[1] == 'none') {
         # Just jump out of the loop. Don't print the errorInfor, because it has already be printed in the function of detectIS in qcAnalysis.py
         next
     }
