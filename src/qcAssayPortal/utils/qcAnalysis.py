@@ -265,23 +265,29 @@ def detectIS(skyFileDir, fileName, experiment_type, error_report_path, errorDfCo
 			if event == 'end':
 				if elem.tag == 'peptide_modifications':
 					internal_standard= elem.get('internal_standard', default=None)
-					if (internal_standard is None or internal_standard == 'none') and (experiment_type=='exp1' or experiment_type=='exp2'):
-					# This means that the user doesn't set the Internal Standard Type when preparing data for upload
+					if internal_standard == 'none':
+					# This means that the user doesn't set the Internal Standard Type when preparing data for upload.
+					# This situation works for experiment 1, 2, 3, 4 and 5.
 					 	#print >> sys.stderr, "Internal_standard value in the peptide_modifications underneath peptide_settings of the *.sky file of %s is unset. Please check it."%(skyFileDir)
-						if internal_standard is None:
-							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is not set.']+['']*(errorDfColNumber-4))+'\n'
-						else:
+						if experiment_type=='exp1' or experiment_type=='exp2':
 							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is set to be none.']+['']*(errorDfColNumber-4))+'\n'
+						else:
+							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is set to be none. Please set it to be heavy.']+['']*(errorDfColNumber-4))+'\n'
 						with open(error_report_path, 'a') as outfTmp:
 							outfTmp.write(errorInfor)
-						internal_standard_type = 'unset'
-					elif internal_standard is None or internal_standard == 'none':
 						internal_standard_type = 'none'
+					elif internal_standard is None:
+						# This means that internal_standard is set to be heavy by default.
+						internal_standard_type = 'heavy'
 					else:
 						internal_standard_type = internal_standard
-					# Since in exp3,exp4 and exp5, the default internal standard should alway be heavy, the internal_standard will be force into heavy.
-					if experiment_type=='exp3' or experiment_type=='exp4' or experiment_type == 'exp5':
-						internal_standard_type = 'heavy'
+					# In exp3,exp4 and exp5, the default internal standard should always be heavy. A check will be performed in experiment3_qc.R, experiment4_qc.R and experiment5_qc.R
+					#if experiment_type=='exp3' or experiment_type=='exp4' or experiment_type == 'exp5':
+						# If internal_standard is not heavy, that means the user forgets to set it to be a correct value when preparing data for upload. 
+					#	if internal_standard != 'heavy':
+					#		errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is incorrect. Please set it to be heavy']+['']*(errorDfColNumber-4))+'\n'
+					#	with open(error_report_path, 'a') as outfTmp:
+					#		outfTmp.write(errorInfor)
 			elem.clear()
 	return internal_standard_type
 

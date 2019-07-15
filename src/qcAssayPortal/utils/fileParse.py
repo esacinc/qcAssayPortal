@@ -284,7 +284,7 @@ def qc_report_infor_parse(qc_report_file, is_inferred_file, assayInforDic, pepti
 			assayInforDic[item]['peptideSeqWithoutIssues'] = []
 		else:
 			# It means that peptides may have errors or warnings.
-			if is_inferred_tmp in ["can't be inferred", "unset"]:
+			if is_inferred_tmp in ["can't be inferred", "none"]:
 				assayInforDic[item]['isQuality'] = "Internal standard type can't be inferred. All the peptides have errors in some essential attributes."
 			else:
 				assayInforDic[item]['isQuality'] = 'Correct'
