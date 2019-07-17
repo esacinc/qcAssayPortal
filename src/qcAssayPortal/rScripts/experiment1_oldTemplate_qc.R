@@ -671,7 +671,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
             
             orderT <- with(temp,  order(ProteinName, PeptideModifiedSequence, -medianArea))
             # Pay attention: Only top three fragment ions with the largest medianArea are kept.
-            # However, in the fitTable and LODTable, all the fragment ions are listed there, so it's better to keep the top three fragment ions in the tables.
+            # However, in the fitTable and LODTable, all the fragment ions are listed there, 
             df <- merge(df, temp[orderT[1:3], ])
             resultT= ddply(df, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup), 
                 summarize, Median=median(HLRatio, na.rm= TRUE), Min = min(HLRatio, na.rm=TRUE), Max=max(HLRatio, na.rm=TRUE), CV=sd(HLRatio, na.rm= TRUE)/mean(HLRatio, na.rm= TRUE), LOD=mean(HLRatio, na.rm= TRUE)+ 3* sd(HLRatio, na.rm= TRUE))
@@ -991,9 +991,10 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                         fitR[,i] <- as.numeric(as.character(fitR[,i]))
                     }
                     
-                    # In fitR and LODTable, only keep the fragment ions in keptFragmentIon
-                    fitR <- fitR[fitR$FragmentIon %in% keptFragmentIon, ]
-                    LODTable <- LODTable[LODTable$FragmentIon %in% keptFragmentIon, ]
+                    # In fitR and LODTable, all the fragment ions will be kept.
+                    # In fitR and LODTable, only keep the fragment ions in keptFragmentIon (discarded)
+                    # fitR <- fitR[fitR$FragmentIon %in% keptFragmentIon, ]
+                    #LODTable <- LODTable[LODTable$FragmentIon %in% keptFragmentIon, ]
                     
                     # Write tables
                     write.table(format(fitR, digits=3), file = paste(plot_output_dir, "\\", input_peptide_sequence, '_', indexLabel, '_ResponseCurveAnalysis.fitTable.tsv', sep=''), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)

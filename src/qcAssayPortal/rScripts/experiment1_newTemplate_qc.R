@@ -998,9 +998,10 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                         fitR[,i] <- as.numeric(as.character(fitR[,i]))
                     }
                     
+                    # In fitR and LODTable, all the fragment ions will be kept.
                     # In fitR and LODTable, only keep the fragment ions in keptFragmentIon
-                    fitR <- fitR[fitR$FragmentIon %in% keptFragmentIon, ]
-                    LODTable <- LODTable[LODTable$FragmentIon %in% keptFragmentIon, ]
+                    #fitR <- fitR[fitR$FragmentIon %in% keptFragmentIon, ]
+                    #LODTable <- LODTable[LODTable$FragmentIon %in% keptFragmentIon, ]
                     
                     # Write tables
                     write.table(format(fitR, digits=3), file = paste(plot_output_dir, "\\", input_peptide_sequence, '_', indexLabel, '_ResponseCurveAnalysis.fitTable.tsv', sep=''), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
