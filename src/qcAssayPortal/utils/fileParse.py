@@ -65,7 +65,7 @@ def locateFigure(peptideSeq, precursorCharge, fileList, experiment_type, dirName
 		f2_string = 'data:image/png;base64,'+png2base64String(f2)
 		f3_string = 'data:image/png;base64,'+png2base64String(f3)
 		return ([f1, f2, f3], [f1_string, f2_string, f3_string])
-	if  experiment_type == 'exp2' or experiment_type == 'exp5':
+	if  experiment_type == 'exp2' or experiment_type == 'exp5' or experiment_type == 'exp3':
 		pattern1 = re.compile(r"^%s_%s_(.*).png$"%(string2escape(peptideSeq), string2escape(precursorCharge))) 
 		f1 = ''
 		for fileTmp in fileList:
@@ -78,10 +78,14 @@ def locateFigure(peptideSeq, precursorCharge, fileList, experiment_type, dirName
 		return ([f1], [f1_string])
 
 def locateTable(peptideSeq, precursorCharge, fileList, experiment_type, dirName):
-	if experiment_type == 'exp1':
-		# There will be three figures plotting in the html.
-		pattern1 = re.compile(r"^%s_(.*)_ResponseCurveAnalysis.LODCTable.tsv$"%(string2escape(peptideSeq)))
-		pattern2 = re.compile(r"^%s_(.*)_ResponseCurveAnalysis.fitTable.tsv$"%(string2escape(peptideSeq))) 
+	if experiment_type == 'exp1' or experiment_type == 'exp3':
+		# There will be two tables shown in the html.
+		if experiment_type == 'exp1':
+			pattern1 = re.compile(r"^%s_(.*)_ResponseCurveAnalysis.LODCTable.tsv$"%(string2escape(peptideSeq)))
+			pattern2 = re.compile(r"^%s_(.*)_ResponseCurveAnalysis.fitTable.tsv$"%(string2escape(peptideSeq)))
+		else:
+			pattern1 = re.compile(r"^%s_%s_(.*)_ave_values_for_spike_levels.tsv$"%(string2escape(peptideSeq), string2escape(precursorCharge)))
+			pattern2 = re.compile(r"^%s_%s_(.*)_summary_table.tsv$"%(string2escape(peptideSeq), string2escape(precursorCharge)))
 		f1 = ''
 		f2 = ''
 		for fileTmp in fileList:

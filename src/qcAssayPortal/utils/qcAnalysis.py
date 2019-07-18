@@ -292,7 +292,7 @@ def detectIS(skyFileDir, fileName, experiment_type, error_report_path, errorDfCo
 	return internal_standard_type
 
 def qcAnalysisRcode(experiment_type, error_report_path, dataset_path, fileList_path, mypeptideType_file_path, RscriptBinary, rScript, plot_output, plot_output_dir):
-	if experiment_type == 'exp2' or experiment_type == 'exp5':
+	if experiment_type == 'exp2' or experiment_type == 'exp5' or experiment_type == 'exp3':
 		#os.system('"%s" %s %s %s %s %s >> %s'%(RscriptBinary, rScript, dataset_path, fileList_path, plot_output, plot_output_dir, error_report_path))
 		subprocess.call([RscriptBinary, rScript, dataset_path, fileList_path, str(plot_output), plot_output_dir, ">>", error_report_path])
 	if experiment_type == 'exp1':
