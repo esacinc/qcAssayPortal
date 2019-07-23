@@ -177,7 +177,7 @@ mypeptideType_file_path <- args[5]
 #dataset_path <- "normal_data.tsv"
 #fileList_path <- "file_namelist_IS.tsv"
 #plot_output <- "True"
-#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\qcAssayPortal\\src\\qcAssayPortal\\rScripts\\test\\debug_exp1\\tmp"
+#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\qcAssayPortal\\src\\qcAssayPortal\\rScripts\\test\\is_spike_exp1_old\\tmp"
 #mypeptideType_file_path <- "mypeptideType_file.tsv"
 
 if (plot_output == 'True') {
@@ -247,12 +247,14 @@ logdf <- data.frame(peptide=as.character(), precursorCharge=as.character(), isot
 # Traverse the SkyDocumentName in fileDf to detect all the possible errors.
 # Create a list to store the  peptides with errors for each SkyDocumentName.
 df_skydoc_error_peptide <- list()
+df_skydoc_error_peptide2 <- list()
 for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
     labkey.data1 <- labkey.data.total[labkey.data.total$SkyDocumentName==SkyDocumentName, ]
     mypeptideType <- labkey.data1$peptide_standard_purity[1]
     # Get a list of all peptides
     peptide_list <- unique(labkey.data1[ , 'peptidemodifiedsequence'])
     peptide_list_with_error <- c()
+    peptide_list_with_error2 <- c()
     for (input_peptide_sequence in peptide_list) {
         labkey.data2 <- labkey.data1[labkey.data1$peptidemodifiedsequence==input_peptide_sequence, ]
         # Get a list of all protein names, although usually one peptide with a specific precursor charge has only one protein.
@@ -309,6 +311,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 cat(errorInfor)
                 cat('\n')
                 peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
+                peptide_list_with_error2 <- c(peptide_list_with_error2, input_peptide_sequence)
                 next
             }
             
@@ -335,6 +338,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 cat(errorInfor)
                 cat('\n')
                 peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
+                peptide_list_with_error2 <- c(peptide_list_with_error2, input_peptide_sequence)
                 next
             }
             
@@ -381,6 +385,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 cat(errorInfor)
                 cat('\n')
                 peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
+                peptide_list_with_error2 <- c(peptide_list_with_error2, input_peptide_sequence)
                 next
             }
             # delete column of Fragment_Ion in df and column of fragment_ion in labkey.data
@@ -408,12 +413,100 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
             #    cat('\n')
             #    peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
             #    next
-            #}          
+            #}         
+            if (internal_standards[1] != "heavy"){
+                TSum= ddply(df2, .(ProteinName, PeptideModifiedSequence, Concentration, SampleGroup, Replicate, ISSpike), summarize, Ratio = sum(heavyArea, na.rm=TRUE)/sum(lightArea, na.rm=TRUE), heavyArea=sum(heavyArea, na.rm=TRUE), lightArea=sum(lightArea, na.rm=TRUE))
+            }
+            if (internal_standards[1] == "heavy"){
+                TSum = ddply(df2, .(ProteinName, PeptideModifiedSequence, Concentration, SampleGroup, Replicate, ISSpike), summarize, Ratio = sum(lightArea, na.rm=TRUE)/sum(heavyArea, na.rm=TRUE), heavyArea=sum(heavyArea, na.rm=TRUE), lightArea=sum(lightArea, na.rm=TRUE))
+            }
+            
+            TSum$FragmentIon <- "SUM"
+            TSum$PrecursorCharge <- ""
+            TSum$ProductCharge <- ""
+            
+            TSum <- TSum[, names(df2)]
+            
+            df2 <- rbind(df2, TSum)
+
+            if (all(df2$ISSpike == 0)) {
+                df2$MeasuredConcentration <- df2$Ratio
+            } else {
+                df2$MeasuredConcentration <- df2$Ratio * df2$ISSpike
+            }
+
+            # Set the PrecursorCharge of the SUM in df2.
+            precursorChargeSet <- c()
+            for (precursorChargeTmp in unique(df2$PrecursorCharge)) {
+              if (precursorChargeTmp != '') {
+                precursorChargeSet <- c(precursorChargeSet, precursorChargeTmp) 
+              }
+            }
+            precursorChargeSet <- precursorChargeSet[1]
+            df2[df2$FragmentIon == 'SUM', ]$PrecursorCharge <- precursorChargeSet
+            
+            curveDataIndex <- with(df2,  order(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, Replicate))
+            thisPeptide <- df2[curveDataIndex,]
+            thisPeptide$PrecursorCharge <- substr(thisPeptide$PrecursorCharge,1,1)
+            thisPeptide$ProductCharge <- substr(thisPeptide$ProductCharge,1,1)
+            uniquePeptide <- unique(thisPeptide$PeptideModifiedSequence)
+
+            # Calculate LOD/LOQ. This part is omitted.
+            thisPeptide$FragmentIon <- paste(thisPeptide$PrecursorCharge, thisPeptide$FragmentIon, thisPeptide$ProductCharge, sep=".") 
+            # Keep the fragment ions in keptFragmentIon
+            result= ddply(df2, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup), 
+                summarize, MedianR=median(Ratio, na.rm= TRUE), MinR = min(Ratio, na.rm=TRUE), MaxR=max(Ratio, na.rm=TRUE), CVR=sd(Ratio, na.rm= TRUE)/mean(Ratio, na.rm= TRUE), MedianMeasuredC=median(MeasuredConcentration, na.rm= TRUE), SDMeasuredC=sd(MeasuredConcentration, na.rm= TRUE), MinMeasuredC=min(MeasuredConcentration, na.rm= TRUE), MaxMeasuredC=max(MeasuredConcentration, na.rm= TRUE))
+
+            result$Median[is.na(result$MedianR)] <- 0
+            
+            curveDataIndex <- with( result,  order(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration))
+            thisPeptide <- result[curveDataIndex,]
+            thisPeptide$PrecursorCharge <- substr(thisPeptide$PrecursorCharge,1,1)
+            thisPeptide$ProductCharge <- substr(thisPeptide$ProductCharge,1,1)
+            uniquePeptide <- unique(thisPeptide$PeptideModifiedSequence)
+            thisPeptide$FragmentIon <- paste(thisPeptide$PrecursorCharge, thisPeptide$FragmentIon, thisPeptide$ProductCharge, sep=".")
+            thisPeptide$MaxMeasuredC[thisPeptide$MaxMeasuredC > max(thisPeptide$MedianMeasuredC)*2] <- max(thisPeptide$MedianMeasuredC)
+
+            #Calculate the robust linear fitting model of concentration of analyte vs.  median of measured concentration of analyte.
+            uniqueT <- unique(thisPeptide$FragmentIon)
+            thisPeptide <- thisPeptide[thisPeptide$Concentration >0,]
+            thisPeptide <- thisPeptide[with(thisPeptide, order(FragmentIon, Concentration)),]
+            thisPeptideR <- thisPeptide[(thisPeptide$MedianMeasuredC != 0 & is.finite(thisPeptide$MedianMeasuredC)),c("FragmentIon", "Concentration", "MedianMeasuredC")]
+            fitR <- NULL
+            for (j in 1:length(uniqueT)){
+                thisFragmentIon <- thisPeptideR[(thisPeptideR$FragmentIon == uniqueT[j]),]
+                x <- thisFragmentIon$Concentration
+                y <- thisFragmentIon$MedianMeasuredC
+                w <- 1/(y)^2
+                tfit <- try(rlm(x~y, weights=w, method="MM", maxit=1000), silent=TRUE)
+                if (!inherits ( tfit, "try-error")){
+                    mCoef <- coef(summary(tfit))
+                    r2 <- (cor(x,y))^2
+                    fitR <- rbind(fitR, c(uniqueT[j], mCoef[2,1], mCoef[1,1], mCoef[2,2], mCoef[1,2],r2))
+                }else{
+                   #print("Regression fit failed")
+                   invisible()
+                }
+            }
+            if (is.null(fitR)) {
+                # It means regression fit of all the fragment ions fail.
+                # However, the information of the peptide is sufficient to infer internal standard.
+                errorType <- "Error"
+                errorSubtype <- "Internal standard peptide concentration"
+                errorReason <- "The annotation of the concentration of the internal standard peptide has issues. Please check the annotation of IS Spike or PeptideConcentrationIS"
+                errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                cat(errorInfor)
+                cat('\n')
+                peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
+                next
+            }
         }
     }
     peptide_list_with_error <- unique(peptide_list_with_error)
+    peptide_list_with_error2 <- unique(peptide_list_with_error2)
     # if peptide_list_with_error is c(), the SkyDocumentName will not be inserted.
     df_skydoc_error_peptide[[SkyDocumentName]] <- peptide_list_with_error
+    df_skydoc_error_peptide2[[SkyDocumentName]] <- peptide_list_with_error2
 }
 
 if (plot_output) {
@@ -427,8 +520,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
     labkey.data1 <- labkey.data.total[labkey.data.total$SkyDocumentName==SkyDocumentName, ]
     peptide_list <- unique(labkey.data1[ , 'peptidemodifiedsequence'])
     # Remove the peptides with errors.
-    if (SkyDocumentName %in% names(df_skydoc_error_peptide)) {
-        peptide_list <- setdiff(peptide_list,df_skydoc_error_peptide[[SkyDocumentName]])
+    if (SkyDocumentName %in% names(df_skydoc_error_peptide2)) {
+        peptide_list <- setdiff(peptide_list,df_skydoc_error_peptide2[[SkyDocumentName]])
     }
     # Randomly sampling 5 peptides. If the number of the peptides is less than 5, keep all of them.
     if (length(peptide_list) >= 5) {
@@ -536,14 +629,15 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
     original_internal_standard <- as.character(fileDf[fileDf$SkyDocumentName == SkyDocumentName, ]$internal_standard)
     inferred_internal_standard <- as.character(df_internal_standard_inferred[df_internal_standard_inferred$SkyDocumentName == SkyDocumentName, ]$internal_standard)
     if (inferred_internal_standard[1] == "can't be inferred") {
-        next
+        # In this condition, the downstream codes will be executed as well. We think the input internal standard type is correct by default.
+        invisible()
     }
     if (original_internal_standard[1] == 'none') {
         # Just jump out of the loop. Don't print the errorInfor, because it has already be printed in the function of detectIS in qcAnalysis.py
         next
     }
     
-    if (original_internal_standard[1] != inferred_internal_standard[1]) {
+    if (original_internal_standard[1] != inferred_internal_standard[1] & inferred_internal_standard[1] != "can't be inferred") {
         errorType <- "Error"
         errorSubtype <- "Internal standard"
         errorReason <- paste('The internal standard in the skyline file is set to be ', original_internal_standard, ', while the inferred internal standard is ', inferred_internal_standard, '.', sep='')
