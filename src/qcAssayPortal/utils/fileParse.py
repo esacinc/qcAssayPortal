@@ -280,9 +280,9 @@ def qc_report_infor_parse(qc_report_file, is_inferred_file, assayInforDic, pepti
 				else:
 					if issueReason not in peptideOutputDic[item][peptideTerm]['issueReason']:
 						peptideOutputDic[item][peptideTerm]['issueReason'].append(issueReason)
-		elif "Internal standard" in qc_report_infor_df_tmp['IssueSubtype'].values[0] and qc_report_infor_df_tmp['IssueType'].values[0] == 'Error':
+		elif  qc_report_infor_df_tmp['IssueSubtype'].values[0] == "Internal standard" and qc_report_infor_df_tmp['IssueType'].values[0] == 'Error':
 			# It means that all the peptides have errors. No peptideTerm will be added into peptideOutputDic for this skyDocumentName
-			assayInforDic[item]['isQuality'] = qc_report_infor_df_tmp[qc_report_infor_df_tmp['IssueSubtype']=="Internal standard"]['IssueReason'].values[0]+'  Errors happen for all the peptides.'
+			assayInforDic[item]['isQuality'] = qc_report_infor_df_tmp[qc_report_infor_df_tmp['IssueSubtype']=="Internal standard"]['IssueReason'].values[0]+' Errors happen for all the peptides.'
 			assayInforDic[item]['peptideSeqErrors'] = peptideTrackDic[item]
 			assayInforDic[item]['peptideSeqWarnings'] = []
 			assayInforDic[item]['peptideSeqWithoutIssues'] = []
@@ -291,7 +291,13 @@ def qc_report_infor_parse(qc_report_file, is_inferred_file, assayInforDic, pepti
 			if is_inferred_tmp in ["can't be inferred", "none"]:
 				assayInforDic[item]['isQuality'] = "Internal standard type can't be inferred. All the peptides have errors in some essential attributes."
 			else:
-				assayInforDic[item]['isQuality'] = 'Correct'
+				if "Internal standard" in qc_report_infor_df_tmp['IssueSubtype'].values:
+					assayInforDic[item]['isQuality'] = qc_report_infor_df_tmp[qc_report_infor_df_tmp['IssueSubtype']=="Internal standard"]['IssueReason'].values[0]+' Errors happen for all the peptides.'
+					#assayInforDic[item]['isQuality'] = 'Internal standard type is incorrectly set.'
+				else:
+					assayInforDic[item]['isQuality'] = 'Correct'
+			# the rows whose column 'IssueSubtype' are 'Internal standard' need to be deleted from qc_report_infor_df_tmp
+			qc_report_infor_df_tmp = qc_report_infor_df_tmp[qc_report_infor_df_tmp['IssueSubtype']!="Internal standard"]
 			for index, row in qc_report_infor_df_tmp.iterrows():
 				peptide = row['PeptideModifiedSequence']
 				precursorCharge = row['PrecursorCharge']
