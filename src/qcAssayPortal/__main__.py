@@ -393,7 +393,7 @@ def main():
 	
 	id1 = 0
 	for item in assayFileList:
-		if assayInforDic[item]['isQuality'] in ['Correct', "Internal standard type can't be inferred. All the peptides have missing values or incorrect data types in some essential attributes.", "Internal standard type can't be inferred. All the peptides have errors in some essential attributes."]:
+		if assayInforDic[item]['isQuality'] in ['Correct', 'Internal standard type is incorrectly set.', 'The internal standard in the skyline file is set to be heavy, while the inferred internal standard is light. Errors happen for all the peptides.', 'The internal standard in the skyline file is set to be light, while the inferred internal standard is heavy. Errors happen for all the peptides.', "Internal standard type can't be inferred. All the peptides have missing values or incorrect data types in some essential attributes.", "Internal standard type can't be inferred. All the peptides have errors in some essential attributes."]:
 			if len(assayInforDic[item]['peptideSeqErrors']) > 0:
 				keptAssayFileErrorTable.append(item)
 			if len(assayInforDic[item]['peptideSeqWarnings']) > 0:
