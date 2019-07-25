@@ -89,7 +89,7 @@ def main():
 					       'new':{'ReplicateNumber':('integer'), 'Day':('integer')}
 					      	},
 					'exp3':{'ReplicateNumber':('integer'), 'AnalyteConcentration':('integer', 'zero integer', 'number')},
-					'exp4':{'ReplicateNumber':('integer'), 'Temperature':('number', 'negative number'), 'Time':('number'), 'FreezeThawCycles':('integer', 'zero integer')},
+					'exp4':{'ReplicateNumber':('integer'), 'Temperature':('number', 'negative number', 'integer', 'zero integer'), 'Time':('zero integer', 'number', 'integer'), 'FreezeThawCycles':('integer', 'zero integer')},
 					'exp5':{'ReplicateNumber':('integer'), 'Day':('integer')}
 					}
 	# In the exported *.tsv from skyline document, there will be some columns where missing values are allowed.
