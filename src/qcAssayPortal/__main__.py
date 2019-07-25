@@ -5,7 +5,7 @@ __author__ = 'Yin Lu'
 __copyright__ = 'Copyright 2018, ESAC, Inc'
 __credits__ = ['Yin Lu']
 __license__ = 'GPL'
-__version__ = '1.0'
+__version__ = '1.1'
 __maintainer__ = 'Yin Lu'
 __email__ = 'yin.lu@esacinc.com'
 
@@ -37,39 +37,14 @@ def main():
 	skyrTempsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'skyrTemps')
 	rScriptsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'rScripts')
 	htmlTempsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'htmlTemps')
-	"""
-	if experiment_type == 'exp1':
-		skyrTemp = os.path.join(skyrTempsDir, "experiment1.skyr")
-		rScript = os.path.join(rScriptsDir, "experiment1_qc.R")
-		reportName="experiment1"
-	elif experiment_type == 'exp2':
-		skyrTemp = os.path.join(skyrTempsDir, "experiment2.skyr")
-		rScript = os.path.join(rScriptsDir, "experiment2_qc.R")
-		reportName="experiment2"
-	elif experiment_type == 'exp3':
-		skyrTemp = os.path.join(skyrTempsDir, "experiment3.skyr")
-		rScript = os.path.join(rScriptsDir, "experiment3_qc.R")
-		reportName="experiment3"
-	elif experiment_type == 'exp4':
-		skyrTemp = os.path.join(skyrTempsDir, "experiment4.skyr")
-		rScript = os.path.join(rScriptsDir, "experiment4_qc.R")
-		reportName="experiment4"
-	elif experiment_type == 'exp5':
-		skyrTemp = os.path.join(skyrTempsDir, "experiment5.skyr")
-		rScript = os.path.join(rScriptsDir, "experiment5_qc.R")
-		reportName="experiment5"
-	else:
-		print >> sys.stderr, "Invalid experiment type. Please check it."
-		sys.exit(1)
-	"""
+
 	if experiment_type not in ['exp1', 'exp2', 'exp3', 'exp4', 'exp5']:
 		print >> sys.stderr, "Invalid experiment type. Please check it."
 		sys.exit(1)
 	skyrTemp = os.path.join(skyrTempsDir, "qcAssayPortal_report.skyr")
 	reportName = "qcAssayPortal_report"
 
-    # The required columns for exp1, exp2, exp3, exp4 and exp5 are defined in a dictionary.
-    
+	# The required columns for exp1, exp2, exp3, exp4 and exp5 are defined in a dictionary.
 	common_col_list = ['ProteinName', 'PeptideModifiedSequence', 'IsotopeLabelType', 'PrecursorCharge', 'ProductCharge', 'FragmentIon', 'Area', 'ReplicateName']
 	required_col_dic = {'exp1':{'old':common_col_list+['Replicate', 'Background', 'SampleGroup', 'ISSpike', 'PeptideConcentrationIS', 'Concentration', 'PeptideConcentration', 'MultiplicationFactor', 'donotuse'],
 							'new':common_col_list+['ReplicateNumber', 'Background', 'SampleGroup', 'InternalStandardConcentration', 'AnalyteConcentration', 'ConcentrationMultiplier', 'donotuse']},
