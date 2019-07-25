@@ -65,7 +65,7 @@ def locateFigure(peptideSeq, precursorCharge, fileList, experiment_type, dirName
 		f2_string = 'data:image/png;base64,'+png2base64String(f2)
 		f3_string = 'data:image/png;base64,'+png2base64String(f3)
 		return ([f1, f2, f3], [f1_string, f2_string, f3_string])
-	if  experiment_type == 'exp2' or experiment_type == 'exp5' or experiment_type == 'exp3':
+	if  experiment_type == 'exp2' or experiment_type == 'exp5' or experiment_type == 'exp3' or experiment_type == 'exp4':
 		pattern1 = re.compile(r"^%s_%s_(.*).png$"%(string2escape(peptideSeq), string2escape(precursorCharge))) 
 		f1 = ''
 		for fileTmp in fileList:
@@ -103,7 +103,7 @@ def locateTable(peptideSeq, precursorCharge, fileList, experiment_type, dirName)
 		f1_df = pd.read_csv(f1, sep='\t', header=0, converters={i: str for i in range(0, 100)})
 		f2_df = pd.read_csv(f2, sep='\t', header=0, converters={i: str for i in range(0, 100)})
 		return([f1, f2], [f1_df, f2_df])
-	if experiment_type == 'exp2' or experiment_type == 'exp5':
+	if experiment_type == 'exp2' or experiment_type == 'exp4' or experiment_type == 'exp5':
 		pattern1 = re.compile(r"^%s_%s_(.*)_CV_results.tsv$"%(string2escape(peptideSeq), string2escape(precursorCharge)))
 		f1 = ''
 		for fileTmp in fileList:
