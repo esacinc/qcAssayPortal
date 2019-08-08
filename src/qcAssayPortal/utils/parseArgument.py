@@ -4,13 +4,13 @@ import argparse
 
 def parseArgument():
 	dir_tmp = os.getcwd()
-	version = '1.0'
+	version = '1.1'
 	usageTmp = '\r{}\n\
 ##                                                                           ##\n\
 ##      qcAssayPortal (Quality control of the five experiments in            ##\n\
 ##                       CPTAC assay portal)                                 ##\n\
 ##                                                                           ##\n\
-##      last change: 11/15/2018                                              ##\n\
+##      last change: 08/06/2019                                              ##\n\
 ##                                                                           ##\n\
 ##                                                                           ##\n\
 ###############################################################################\n\
