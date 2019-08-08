@@ -628,14 +628,16 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
     original_internal_standard <- as.character(fileDf[fileDf$SkyDocumentName == SkyDocumentName, ]$internal_standard)
     inferred_internal_standard <- as.character(df_internal_standard_inferred[df_internal_standard_inferred$SkyDocumentName == SkyDocumentName, ]$internal_standard)
     if (inferred_internal_standard[1] == "can't be inferred") {
-        next
+        # In this situation, use the original internal standard for calculations.
+        #next
+        invisible()
     }
     if (original_internal_standard[1] == 'none') {
         # Just jump out of the loop. Don't print the errorInfor, because it has already be printed in the function of detectIS in qcAnalysis.py
         next
     }
     
-    if (original_internal_standard[1] != inferred_internal_standard[1]) {
+    if ((inferred_internal_standard[1] != "can't be inferred") & (original_internal_standard[1] != inferred_internal_standard[1])) {
         errorType <- "Error"
         errorSubtype <- "Internal standard"
         errorReason <- paste('The internal standard in the skyline file is set to be ', original_internal_standard, ', while the inferred internal standard is ', inferred_internal_standard, '.', sep='')
